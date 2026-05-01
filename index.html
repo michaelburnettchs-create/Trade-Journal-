@@ -196,18 +196,22 @@
     <!-- LOG TRADE -->
     <div id="page-log" class="page">
       <div class="page-title">Log trade</div>
-      <div class="page-sub">Paste your Discord review — the AI reads it, scores all 7 rules, and fills the fields automatically.</div>
+      <div class="page-sub">Send a screenshot to Claude in chat → Claude returns a JSON block → paste here → review and save.</div>
       <div class="log-card">
-        <div class="log-card-title">PASTE REVIEW</div>
+        <div class="log-card-title">PASTE PARSED JSON</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">
+          Send your screenshot to Claude in chat. Claude will return a JSON block. Paste it here to add the trade. No API key, no parser failures.
+        </div>
         <div class="form-group">
-          <label class="form-label">Discord trade review</label>
-          <textarea id="raw-input" rows="10" placeholder="Buy 5 .90 9:35&#10;Sell 2 1.03 9:37 14%&#10;...&#10;IDEA- ...&#10;ENTRY- ...&#10;EXIT- ..."></textarea>
+          <label class="form-label">Trade JSON from Claude</label>
+          <textarea id="json-input" rows="14" placeholder='{&#10;  &quot;date&quot;: &quot;5/1&quot;,&#10;  &quot;ticker&quot;: &quot;PLTR 145 MAY 1 C&quot;,&#10;  &quot;result&quot;: -27,&#10;  &quot;outcome&quot;: &quot;loss&quot;,&#10;  &quot;score&quot;: 100,&#10;  &quot;exitType&quot;: &quot;structural&quot;,&#10;  &quot;pnl&quot;: -184,&#10;  &quot;rules&quot;: { &quot;r1&quot;: 1, ... },&#10;  &quot;idea&quot;: &quot;...&quot;,&#10;  &quot;entryNotes&quot;: &quot;...&quot;,&#10;  &quot;exitNotes&quot;: &quot;...&quot;,&#10;  &quot;takeaway&quot;: &quot;...&quot;,&#10;  &quot;flags&quot;: []&#10;}'></textarea>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
-          <button class="parse-btn" id="parse-btn" onclick="parseReview()">PARSE REVIEW</button>
+          <button class="parse-btn" id="parse-btn" onclick="addJsonTrade()">ADD TRADE</button>
+          <button class="ghost-btn" onclick="clearJsonInput()">CLEAR</button>
           <span class="status-msg" id="parse-status"></span>
         </div>
-        <div class="loading-msg" id="loading-msg" style="display:none">Reading your review and scoring rules...</div>
+        <div class="loading-msg" id="loading-msg" style="display:none">Adding trade...</div>
         <div class="preview-box" id="preview-box">
           <div class="preview-title">PARSED — REVIEW &amp; CONFIRM</div>
           <div class="preview-meta" id="preview-meta"></div>
@@ -520,55 +524,69 @@ function renderPatterns(trades){
     <div class="insight-card" style="border-color:var(--green)"><strong>Clean losses: ${cleanLosses}.</strong> High-compliance losses are variance — do not adjust the model.</div>`;
 }
 
-// PARSE
-async function parseReview(){
-  const raw=document.getElementById('raw-input').value.trim();
-  if(!raw){document.getElementById('parse-status').textContent='Paste a review first.';return;}
+function clearJsonInput(){
+  document.getElementById('json-input').value='';
   document.getElementById('parse-status').textContent='';
-  document.getElementById('loading-msg').style.display='block';
-  document.getElementById('parse-btn').disabled=true;
   document.getElementById('preview-box').classList.remove('open');
-  const prompt=`You are a trading journal parser. Extract and score a trade review against the Break & Retest model.
+}
 
-TRADE REVIEW:
-${raw}
-
-SCORING RULES (1=pass, 0=fail):
-r1 Tight entry: tight with stop at level, minimal drawdown. Fail if overextended/loose/FOMO/chased.
-r2 2+ RR pre-marked: TP levels identified before entry. Fail if no TPs or RR flawed.
-r3 4 min+ confirmation: level held 4+ minutes. Score 0 if "early" without hold time.
-r4 Level had prior respect: prior reaction/rejection mentioned.
-r5 Market correlation: NQ/ES/SPY/QQQ context mentioned.
-r6 TPs pre-marked: TPs set at liquidity zones before entry.
-r7 Structural exit: stop/TP/trail only. Fail if closed early/fear/avoid red day.
-
-Also extract: ticker, date (M/D format), avg result % (average all sell %s), outcome (win/>2%, loss/<-1%, be otherwise), exit_type, pnl (estimate dollar P&L if contract prices visible, else 0), idea, entry_notes, exit_notes, takeaway, flags array.
-
-Respond ONLY with valid JSON:
-{"ticker":"","date":"","result":0,"outcome":"win","exit_type":"structural","pnl":0,"rules":{"r1":1,"r2":1,"r3":1,"r4":1,"r5":1,"r6":1,"r7":1},"score":0,"idea":"","entry_notes":"","exit_notes":"","takeaway":"","flags":[]}`;
+function addJsonTrade(){
+  const raw=document.getElementById('json-input').value.trim();
+  if(!raw){document.getElementById('parse-status').textContent='Paste a JSON block first.';return;}
+  document.getElementById('parse-status').textContent='';
+  let parsed;
   try{
-    const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
-    const data=await resp.json();
-    const text=data.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim();
-    const parsed=JSON.parse(text);
-    parsed.score=Math.round(Object.values(parsed.rules).filter(v=>v===1).length/7*100);
-    pendingTrade=parsed;
-    showPreview(parsed);
+    // strip markdown fences and any surrounding text
+    let cleaned=raw.replace(/```json|```/g,'').trim();
+    // try to grab from first { to last }
+    const first=cleaned.indexOf('{');
+    const last=cleaned.lastIndexOf('}');
+    if(first!==-1 && last!==-1) cleaned=cleaned.slice(first,last+1);
+    parsed=JSON.parse(cleaned);
   }catch(e){
-    document.getElementById('parse-status').textContent='Parse failed — check text and try again.';
+    document.getElementById('parse-status').textContent='Invalid JSON — check format and try again.';
+    return;
   }
-  document.getElementById('loading-msg').style.display='none';
-  document.getElementById('parse-btn').disabled=false;
+
+  // Normalize field names — accept both snake_case and camelCase
+  const norm={
+    ticker:parsed.ticker||'',
+    date:parsed.date||'',
+    result:parsed.result||0,
+    outcome:parsed.outcome||'be',
+    score:parsed.score||0,
+    exitType:parsed.exitType||parsed.exit_type||'structural',
+    pnl:parsed.pnl||0,
+    rules:parsed.rules||{r1:1,r2:1,r3:1,r4:1,r5:1,r6:1,r7:1},
+    idea:parsed.idea||'',
+    entryNotes:parsed.entryNotes||parsed.entry_notes||'',
+    exitNotes:parsed.exitNotes||parsed.exit_notes||'',
+    takeaway:parsed.takeaway||'',
+    flags:parsed.flags||[]
+  };
+
+  if(!norm.ticker||!norm.date){
+    document.getElementById('parse-status').textContent='Missing ticker or date — check JSON.';
+    return;
+  }
+
+  // Recompute score from rules
+  norm.score=Math.round(Object.values(norm.rules).filter(v=>v===1).length/7*100);
+
+  pendingTrade=norm;
+  showPreview(norm);
 }
 
 function showPreview(p){
+  const entryNotes=p.entryNotes||p.entry_notes||'—';
+  const exitNotes=p.exitNotes||p.exit_notes||'—';
   document.getElementById('preview-meta').innerHTML=`<div class="pmeta"><div class="pmeta-val">${p.ticker||'—'}</div><div class="pmeta-lbl">Ticker</div></div><div class="pmeta"><div class="pmeta-val">${p.date||'—'}</div><div class="pmeta-lbl">Date</div></div><div class="pmeta"><div class="pmeta-val" style="color:${p.result>0?'var(--green)':'var(--red)'}">${p.result>0?'+':''}${p.result}%</div><div class="pmeta-lbl">Result</div></div><div class="pmeta"><div class="pmeta-val" style="color:${scoreColor(p.score)}">${p.score}%</div><div class="pmeta-lbl">Score</div></div>`;
   document.getElementById('preview-rules').innerHTML=Object.entries(p.rules).map(([k,v])=>`<div class="rule-score-row"><span>${ruleFullLabels[k]}</span><span class="rule-reason">${ruleReasons[k]}</span><span class="badge ${v?'badge-pass':'badge-fail'}">${v?'pass':'fail'}</span></div>`).join('');
   const bar=document.getElementById('preview-score-bar'); bar.style.width=p.score+'%'; bar.style.background=scoreColor(p.score);
   document.getElementById('preview-score-num').textContent=p.score+'%'; document.getElementById('preview-score-num').style.color=scoreColor(p.score);
   document.getElementById('preview-idea').textContent=p.idea||'—';
-  document.getElementById('preview-entry').textContent=p.entry_notes||'—';
-  document.getElementById('preview-exit').textContent=p.exit_notes||'—';
+  document.getElementById('preview-entry').textContent=entryNotes;
+  document.getElementById('preview-exit').textContent=exitNotes;
   document.getElementById('preview-takeaway').textContent=p.takeaway||'—';
   document.getElementById('preview-flags').innerHTML=p.flags&&p.flags.length?p.flags.map(f=>`<div class="flag-item">⚑ ${f}</div>`).join(''):'<div style="font-size:11px;color:var(--green)">No flags — clean review.</div>';
   document.getElementById('preview-box').classList.add('open');
@@ -578,10 +596,32 @@ function confirmSave(){
   if(!pendingTrade)return;
   const trades=loadTrades();
   const dateStr=pendingTrade.date||'';
-  let dateSort='2026-01-01';
-  const m=dateStr.match(/(\d+)\/(\d+)(?:\/(\d+))?/);
-  if(m){const yr=m[3]?'20'+m[3].slice(-2):'2026';dateSort=`${yr}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;}
-  const t={id:Math.max(...trades.map(t=>t.id))+1,dateSort,date:pendingTrade.date,ticker:pendingTrade.ticker,result:pendingTrade.result,outcome:pendingTrade.outcome,score:pendingTrade.score,exitType:pendingTrade.exit_type,pnl:pendingTrade.pnl||0,rules:Object.fromEntries(Object.entries(pendingTrade.rules).map(([k,v])=>[k,v?1:0])),idea:pendingTrade.idea,entryNotes:pendingTrade.entry_notes,exitNotes:pendingTrade.exit_notes,takeaway:pendingTrade.takeaway,flags:pendingTrade.flags||[]};
+  let dateSort=pendingTrade.dateSort||'';
+  if(!dateSort){
+    dateSort='2026-01-01';
+    const m=dateStr.match(/(\d+)\/(\d+)(?:\/(\d+))?/);
+    if(m){const yr=m[3]?'20'+m[3].slice(-2):'2026';dateSort=`${yr}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;}
+  }
+  const exitType=pendingTrade.exitType||pendingTrade.exit_type||'structural';
+  const entryNotes=pendingTrade.entryNotes||pendingTrade.entry_notes||'';
+  const exitNotes=pendingTrade.exitNotes||pendingTrade.exit_notes||'';
+  const t={
+    id:Math.max(0,...trades.map(t=>t.id))+1,
+    dateSort,
+    date:pendingTrade.date,
+    ticker:pendingTrade.ticker,
+    result:pendingTrade.result,
+    outcome:pendingTrade.outcome,
+    score:pendingTrade.score,
+    exitType,
+    pnl:pendingTrade.pnl||0,
+    rules:Object.fromEntries(Object.entries(pendingTrade.rules).map(([k,v])=>[k,v?1:0])),
+    idea:pendingTrade.idea,
+    entryNotes,
+    exitNotes,
+    takeaway:pendingTrade.takeaway,
+    flags:pendingTrade.flags||[]
+  };
   trades.push(t);
   saveTrades(trades);
   document.getElementById('save-msg').style.display='inline';
@@ -592,7 +632,8 @@ function confirmSave(){
 }
 
 function clearPreview(){
-  document.getElementById('raw-input').value='';
+  const ji=document.getElementById('json-input');
+  if(ji) ji.value='';
   document.getElementById('preview-box').classList.remove('open');
   document.getElementById('parse-status').textContent='';
   pendingTrade=null;
