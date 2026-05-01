@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trade Journal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+  :root{--bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#e8e8f0;--text2:#888899;--text3:#555566;--blue:#4a9eff;--blue-dim:rgba(74,158,255,0.1);--green:#3dd68c;--green-dim:rgba(61,214,140,0.1);--red:#ff5e5e;--red-dim:rgba(255,94,94,0.1);--amber:#ffb347;--amber-dim:rgba(255,179,71,0.1);--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;line-height:1.6}
+  .shell{display:flex;min-height:100vh}
+  .sidebar{width:200px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;bottom:0}
+  .logo{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
+  .logo-title{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--blue);letter-spacing:.12em;text-transform:uppercase}
+  .logo-sub{font-size:11px;color:var(--text3);margin-top:2px}
+  .nav{padding:16px 0;flex:1}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s;border-left:2px solid transparent}
+  .nav-item:hover{color:var(--text);background:rgba(255,255,255,.03)}
+  .nav-item.active{color:var(--blue);border-left-color:var(--blue);background:var(--blue-dim)}
+  .nav-icon{font-size:14px;width:16px;text-align:center}
+  .main{margin-left:200px;padding:32px 36px;flex:1;max-width:1200px}
+  .page{display:none}.page.active{display:block}
+  .page-title{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--text);margin-bottom:4px;letter-spacing:-.02em}
+  .page-sub{font-size:12px;color:var(--text3);margin-bottom:24px}
+  .metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px}
+  .metric-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+  .metric-val{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--text)}
+  .metric-lbl{font-size:11px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.06em}
+  .section-label{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+  .trade-table{width:100%;border-collapse:collapse}
+  .trade-table th{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+  .trade-table td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);vertical-align:middle}
+  .trade-table tr{cursor:pointer;transition:background .1s}
+  .trade-table tr:hover td{background:var(--bg3)}
+  .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:500}
+  .badge-win{background:var(--green-dim);color:var(--green)}.badge-loss{background:var(--red-dim);color:var(--red)}.badge-be{background:var(--amber-dim);color:var(--amber)}
+  .badge-pass{background:var(--green-dim);color:var(--green)}.badge-fail{background:var(--red-dim);color:var(--red)}
+  .score-inline{font-family:var(--mono);font-size:12px;font-weight:500}
+  .detail-row td{padding:0!important;border-bottom:none!important;background:transparent!important;cursor:default}
+  .detail-inner{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:18px 20px;margin:4px 0 10px;display:none}
+  .detail-inner.open{display:block}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:14px}
+  .detail-field-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;font-family:var(--mono)}
+  .detail-field-val{font-size:12px;color:var(--text2);line-height:1.6}
+  .rule-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+  .rule-chip{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:3px;font-weight:500}
+  .chip-pass{background:var(--green-dim);color:var(--green)}.chip-fail{background:var(--red-dim);color:var(--red)}
+  .takeaway-box{background:var(--bg2);border-left:2px solid var(--blue);border-radius:0 6px 6px 0;padding:10px 14px;font-size:12px;color:var(--text2);line-height:1.6}
+  .flag-item{font-size:11px;color:var(--amber);padding:2px 0}
+  /* CALENDAR */
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .cal-month{font-family:var(--mono);font-size:16px;font-weight:500;color:var(--text)}
+  .cal-btn{background:transparent;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:5px 12px;font-family:var(--mono);font-size:13px;cursor:pointer;transition:all .15s}
+  .cal-btn:hover{border-color:var(--border2);color:var(--text)}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:24px}
+  .cal-day-header{font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center;padding:6px 0;letter-spacing:.06em}
+  .cal-cell{background:var(--bg2);border:1px solid var(--border);border-radius:6px;min-height:80px;padding:8px;position:relative;transition:border-color .15s}
+  .cal-cell:hover{border-color:var(--border2)}
+  .cal-cell.has-trade{cursor:pointer}
+  .cal-cell.other-month{opacity:.3}
+  .cal-cell.today{border-color:var(--blue)}
+  .cal-date{font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:4px}
+  .cal-date.today-num{color:var(--blue);font-weight:500}
+  .cal-pnl{font-family:var(--mono);font-size:13px;font-weight:500;margin-bottom:2px}
+  .cal-pnl.pos{color:var(--green)}.cal-pnl.neg{color:var(--red)}
+  .cal-trade-count{font-size:10px;color:var(--text3)}
+  .cal-week-summary{background:var(--bg2);border:1px solid var(--border);border-radius:6px;min-height:80px;padding:8px}
+  .cal-week-lbl{font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:.05em;margin-bottom:4px}
+  .cal-week-pnl{font-family:var(--mono);font-size:12px;font-weight:500}
+  .cal-week-pct{font-size:10px;margin-top:1px}
+  .cal-week-trades{font-size:10px;color:var(--text3);margin-top:2px}
+  .week-summary-row{display:grid;grid-template-columns:1fr 110px 110px 110px;gap:12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-bottom:6px;align-items:center}
+  .week-range{font-family:var(--mono);font-size:12px;color:var(--text2)}
+  .week-stat{font-family:var(--mono);font-size:13px;font-weight:500;text-align:right}
+  .week-stat-lbl{font-size:10px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em}
+  /* LOG */
+  .log-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:22px;margin-bottom:16px}
+  .log-card-title{font-family:var(--mono);font-size:12px;color:var(--blue);margin-bottom:16px;letter-spacing:.05em}
+  .form-group{margin-bottom:14px}
+  .form-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;display:block;font-family:var(--mono)}
+  textarea,input[type=text]{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--sans);font-size:13px;padding:9px 12px;resize:vertical;transition:border-color .15s;outline:none}
+  textarea:focus,input[type=text]:focus{border-color:var(--border2)}
+  textarea{min-height:80px}
+  .parse-btn{background:var(--blue);color:#000;border:none;border-radius:6px;padding:10px 20px;font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;letter-spacing:.05em;transition:opacity .15s;margin-top:4px}
+  .parse-btn:hover{opacity:.85}.parse-btn:disabled{opacity:.4;cursor:not-allowed}
+  .save-btn{background:var(--green);color:#000;border:none;border-radius:6px;padding:9px 18px;font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;transition:opacity .15s}
+  .save-btn:hover{opacity:.85}
+  .ghost-btn{background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:6px;padding:9px 16px;font-family:var(--mono);font-size:12px;cursor:pointer;transition:all .15s}
+  .ghost-btn:hover{color:var(--text);border-color:var(--border2)}
+  .status-msg{font-size:12px;color:var(--text3);margin-left:10px}
+  .preview-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:18px;margin-top:16px;display:none}
+  .preview-box.open{display:block}
+  .preview-title{font-family:var(--mono);font-size:11px;color:var(--blue);margin-bottom:14px;letter-spacing:.06em}
+  .preview-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+  .pmeta{background:var(--bg2);border-radius:6px;padding:8px 10px}
+  .pmeta-val{font-family:var(--mono);font-size:14px;font-weight:500}
+  .pmeta-lbl{font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.06em}
+  .rule-score-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+  .rule-score-row:last-child{border-bottom:none}
+  .rule-reason{font-size:11px;color:var(--text3)}
+  .score-bar-wrap{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .score-bar-bg{flex:1;height:5px;background:var(--border);border-radius:3px}
+  .score-bar-fill{height:5px;border-radius:3px;transition:width .4s}
+  .loading-msg{font-size:12px;color:var(--text3);padding:12px 0;font-family:var(--mono)}
+  /* PATTERNS */
+  .patterns-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+  .patterns-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:18px}
+  .patterns-card-title{font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:12px;letter-spacing:.07em;text-transform:uppercase}
+  .pitem{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border);color:var(--text2)}
+  .pitem:last-child{border-bottom:none}
+  .compliance-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)}
+  .compliance-row:last-child{border-bottom:none}
+  .compliance-name{font-size:12px;min-width:130px;color:var(--text2)}
+  .compliance-bar-bg{flex:1;height:5px;background:var(--border);border-radius:3px}
+  .compliance-bar-fill{height:5px;border-radius:3px}
+  .compliance-pct{font-family:var(--mono);font-size:11px;min-width:32px;text-align:right}
+  .insight-card{background:var(--bg2);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--text2);margin-bottom:8px;border-left:2px solid;line-height:1.6}
+  .insight-card strong{color:var(--text);font-weight:500}
+  .table-controls{display:flex;justify-content:flex-end;margin-bottom:10px;gap:8px;align-items:center}
+  .sort-btn{background:transparent;border:1px solid var(--border);color:var(--text3);border-radius:5px;padding:5px 12px;font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:.06em;transition:all .15s}
+  .sort-btn:hover{border-color:var(--border2);color:var(--text2)}
+  .sort-btn.active{border-color:var(--blue);color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-title">Trade Journal</div>
+      <div class="logo-sub">Break &amp; Retest Model</div>
+    </div>
+    <div class="nav">
+      <div class="nav-item active" onclick="showPage('dashboard')"><span class="nav-icon">▦</span> Dashboard</div>
+      <div class="nav-item" onclick="showPage('calendar')"><span class="nav-icon">▣</span> Calendar</div>
+      <div class="nav-item" onclick="showPage('trades')"><span class="nav-icon">≡</span> All trades</div>
+      <div class="nav-item" onclick="showPage('log')"><span class="nav-icon">+</span> Log trade</div>
+      <div class="nav-item" onclick="showPage('patterns')"><span class="nav-icon">◈</span> Patterns</div>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px">
+      <button class="ghost-btn" style="font-size:10px;padding:6px 10px" onclick="exportJournal()">EXPORT JSON</button>
+      <button class="ghost-btn" style="font-size:10px;padding:6px 10px" onclick="document.getElementById('import-input').click()">IMPORT JSON</button>
+      <button class="ghost-btn" style="font-size:10px;padding:6px 10px;color:var(--red)" onclick="resetJournal()">RESET</button>
+      <input type="file" id="import-input" accept=".json,application/json" style="display:none" onchange="importJournal(this)">
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub" id="dash-sub">—</div>
+      <div class="metrics" id="dash-metrics"></div>
+      <div class="section-label">All recent trades</div>
+      <table class="trade-table"><thead><tr><th>Date</th><th>Trade</th><th>Result</th><th>Score</th><th>Exit</th><th>Verdict</th></tr></thead><tbody id="dash-tbody"></tbody></table>
+    </div>
+
+    <!-- CALENDAR -->
+    <div id="page-calendar" class="page">
+      <div class="page-title">P&amp;L Calendar</div>
+      <div class="page-sub">Monthly overview of trade results. Click any day to see trades.</div>
+      <div class="cal-nav">
+        <button class="cal-btn" onclick="calPrev()">&#8592;</button>
+        <span class="cal-month" id="cal-month-label"></span>
+        <button class="cal-btn" onclick="calNext()">&#8594;</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div id="cal-week-summary-section" style="margin-top:24px">
+        <div class="section-label">Weekly summary</div>
+        <div id="cal-week-summary-list"></div>
+      </div>
+      <div id="cal-month-summary-section" style="margin-top:24px">
+        <div class="section-label">Monthly summary</div>
+        <div id="cal-month-summary-card"></div>
+      </div>
+      <div id="cal-day-detail" style="display:none;margin-top:24px">
+        <div class="section-label" id="cal-detail-label"></div>
+        <table class="trade-table"><thead><tr><th>Trade</th><th>Result</th><th>Score</th><th>Exit</th></tr></thead><tbody id="cal-detail-tbody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ALL TRADES -->
+    <div id="page-trades" class="page">
+      <div class="page-title">All trades</div>
+      <div class="page-sub" id="all-sub">—</div>
+      <div class="table-controls">
+        <span style="font-size:11px;color:var(--text3);font-family:var(--mono)">SORT:</span>
+        <button class="sort-btn active" id="sort-date-btn" onclick="setSort('date')">DATE ↓</button>
+        <button class="sort-btn" id="sort-score-btn" onclick="setSort('score')">SCORE</button>
+        <button class="sort-btn" id="sort-result-btn" onclick="setSort('result')">RESULT</button>
+      </div>
+      <table class="trade-table"><thead><tr><th>Date</th><th>Trade</th><th>Result</th><th>Score</th><th>Exit</th><th>Verdict</th></tr></thead><tbody id="all-tbody"></tbody></table>
+    </div>
+
+    <!-- LOG TRADE -->
+    <div id="page-log" class="page">
+      <div class="page-title">Log trade</div>
+      <div class="page-sub">Paste your Discord review — the AI reads it, scores all 7 rules, and fills the fields automatically.</div>
+      <div class="log-card">
+        <div class="log-card-title">PASTE REVIEW</div>
+        <div class="form-group">
+          <label class="form-label">Discord trade review</label>
+          <textarea id="raw-input" rows="10" placeholder="Buy 5 .90 9:35&#10;Sell 2 1.03 9:37 14%&#10;...&#10;IDEA- ...&#10;ENTRY- ...&#10;EXIT- ..."></textarea>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="parse-btn" id="parse-btn" onclick="parseReview()">PARSE REVIEW</button>
+          <span class="status-msg" id="parse-status"></span>
+        </div>
+        <div class="loading-msg" id="loading-msg" style="display:none">Reading your review and scoring rules...</div>
+        <div class="preview-box" id="preview-box">
+          <div class="preview-title">PARSED — REVIEW &amp; CONFIRM</div>
+          <div class="preview-meta" id="preview-meta"></div>
+          <div style="margin-bottom:12px">
+            <div class="section-label" style="margin-bottom:8px">Rule scoring</div>
+            <div id="preview-rules"></div>
+            <div class="score-bar-wrap"><div class="score-bar-bg"><div class="score-bar-fill" id="preview-score-bar"></div></div><span class="score-inline" id="preview-score-num"></span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div><div class="detail-field-lbl">Idea</div><div class="detail-field-val" id="preview-idea"></div></div>
+            <div><div class="detail-field-lbl">Entry</div><div class="detail-field-val" id="preview-entry"></div></div>
+            <div><div class="detail-field-lbl">Exit</div><div class="detail-field-val" id="preview-exit"></div></div>
+            <div><div class="detail-field-lbl">Takeaway</div><div class="detail-field-val" id="preview-takeaway"></div></div>
+          </div>
+          <div id="preview-flags" style="margin-bottom:12px"></div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="save-btn" onclick="confirmSave()">SAVE TO JOURNAL</button>
+            <button class="ghost-btn" onclick="clearPreview()">CLEAR</button>
+            <span class="status-msg" id="save-msg" style="display:none;color:var(--green)">Saved.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PATTERNS -->
+    <div id="page-patterns" class="page">
+      <div class="page-title">Patterns</div>
+      <div class="page-sub">Rule compliance, win/loss breakdown, and insights across all logged trades.</div>
+      <div id="patterns-content"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+const SEED=[
+  {id:1,dateSort:"2026-03-25",date:"3/25",ticker:"IWM 252 March 25 P",result:33,outcome:"win",score:86,exitType:"structural",pnl:297,rules:{r1:1,r2:1,r3:0,r4:1,r5:1,r6:1,r7:1},idea:"Pop and fade of IWM 253 supply zone. Daily 20 and 100 confluence above, prior rejection, previously traded level.",entryNotes:"Early and tight. 4/4 indexes at market supply, SPY starting to reject Daily 200. High confidence 0DTE. Held through 15%+ drawdown.",exitNotes:"All exits on 8ema extensions and breaks on 1min. Last TP was LOD. TP1 bad fill on wick hurt average. Peak 152%.",takeaway:"Highest % runner at time of trade. Caught full move to LOD. TP1 fill issue hurt average — consider limit orders on TP1. Held through drawdown and it paid. In stop loss we trust.",flags:["Rule 3 flagged — early entry, hold time not specified."]},
+  {id:2,dateSort:"2026-04-01",date:"4/1",ticker:"NFLX 96 APR 02 P",result:29,outcome:"win",score:72,exitType:"structural",pnl:195,rules:{r1:0,r2:1,r3:1,r4:1,r5:1,r6:1,r7:1},idea:"TOP WATCH, pop and fade of 96.74 major channel highs on NFLX. Scalped into Daily 20.",entryNotes:"Loose late entry, but 6 min of engulfment and 2RRR. Market strong but NQ QQQ found supply.",exitNotes:"TP1 PML sold 2, quick scaling due to market strength, let last 2 run. All exits structural on liquidity pushes.",takeaway:"Great scalp to start the month. Entry was loose and late but 6 min confirmation saved it. Market strength made early scaling correct — let runners work. Soft Rule 1 violation worth watching.",flags:["Entry loose and late — soft Rule 1 violation"]},
+  {id:3,dateSort:"2026-04-02",date:"4/2",ticker:"IWM 246 APR 2 P",result:-21,outcome:"loss",score:55,exitType:"structural",pnl:-185,rules:{r1:1,r2:1,r3:1,r4:1,r5:0,r6:1,r7:1},idea:"Pop and fade off 247.45 aligned with SPY rejection.",entryNotes:"6 min hold, engulfment. Valid but slightly early. Market ripping against.",exitNotes:"Proper 2min close above stop.",takeaway:"Market correlation gate failed. IWM is market — don't short into strong trend without exceptional level. Level was borderline.",flags:[]},
+  {id:4,dateSort:"2026-04-06",date:"4/6",ticker:"NFLX 89 APR 10 C",result:-13,outcome:"loss",score:35,exitType:"modified",pnl:-85,rules:{r1:0,r2:0,r3:0,r4:1,r5:1,r6:0,r7:1},idea:"Pullback long to 99.5 major demand.",entryNotes:"FOMO entry. 3 engulf candles, overextended, RR flawed.",exitNotes:"Modified stop to avoid -24%. Exited early to prevent red day.",takeaway:"Horrible entry. If entry is not tight there is no trade. Triggered emotional bleed into PLTR.",flags:["Entry not tight","RR not pre-confirmed","Confirmation insufficient"]},
+  {id:5,dateSort:"2026-04-06",date:"4/6",ticker:"PLTR 145 APR 10 P",result:7,outcome:"be",score:75,exitType:"emotional",pnl:57,rules:{r1:1,r2:1,r3:1,r4:1,r5:1,r6:1,r7:0},idea:"Pop and fade off 150.52 PMH + Daily 20.",entryNotes:"Tight, 10 min rejection confirmed.",exitNotes:"Closed early. NFLX loss bled into this exit. Full TP was 25%.",takeaway:"NFLX bleed cost 18% on a perfect setup. One-loss rule would have ended session after NFLX and protected this trade.",flags:["Exit not structural — emotional bleed from prior loss"]},
+  {id:6,dateSort:"2026-04-08",date:"4/8",ticker:"SMH 4432.5 APR 10 P",result:-9,outcome:"loss",score:92,exitType:"structural",pnl:-120,rules:{r1:1,r2:1,r3:1,r4:1,r5:1,r6:1,r7:1},idea:"Break and retest over major 4hr SMH PATH level.",entryNotes:"14 min hold, tight, NQ/Daily 200 aligned.",exitNotes:"Proper 2min close below stop. Fakeout.",takeaway:"Clean process, clean loss. Variance. Nothing to change.",flags:[]},
+  {id:7,dateSort:"2026-04-09",date:"4/9",ticker:"CRCL 89 APR 10 P",result:13,outcome:"win",score:65,exitType:"emotional",pnl:63,rules:{r1:1,r2:1,r3:1,r4:1,r5:1,r6:0,r7:0},idea:"Pullback long to 88 demand and Daily 50.",entryNotes:"Reclaim and hold of 88, engulfment. Confident entry.",exitNotes:"Took 13%. Peaked at 115%. No structural trigger at exit.",takeaway:"Most expensive exit in journal. 13% taken on 115% peak. TPs must be pre-marked.",flags:["TPs not pre-marked","Exit not structural — 115% peak left on table"]},
+  {id:8,dateSort:"2026-04-10",date:"4/10",ticker:"PLTR 125 0DTE P",result:43,outcome:"win",score:90,exitType:"structural",pnl:465,rules:{r1:1,r2:1,r3:1,r4:1,r5:1,r6:1,r7:1},idea:"Textbook break and retest under 4hr PATH at 125.14.",entryNotes:"4 min rejections, engulfment, Daily 100s rejection aligned.",exitNotes:"Scaled at pre-marked liquidity levels. Final exit near TP4.",takeaway:"Best trade in sample. Textbook execution.",flags:[]},
+  {id:9,dateSort:"2026-04-13",date:"4/13",ticker:"NFLX 106 APR 17 C",result:3,outcome:"be",score:70,exitType:"emotional",pnl:15,rules:{r1:1,r2:1,r3:1,r4:1,r5:1,r6:1,r7:0},idea:"Break and retest pullback long at 102.16.",entryNotes:"14 min hold, engulfment, break of 8ema. Perfect entry.",exitNotes:"TP2/3 closed early — contracts moved poorly. Full TP2 was 17%.",takeaway:"Textbook entry, pre-structural exit. Slow contracts are not a structural trigger.",flags:["Exit before structural trigger"]},
+  {id:10,dateSort:"2026-04-14",date:"4/14",ticker:"PLTR 139 APR 17 C",result:-13,outcome:"loss",score:95,exitType:"structural",pnl:-104,rules:{r1:1,r2:1,r3:1,r4:1,r5:1,r6:1,r7:1},idea:"Reclaim of 136.3 aligned with 8ema hold.",entryNotes:"Strong wick off 136.3, 8ema push, tight entry.",exitNotes:"Proper 2min close below stop. Fakeout, swept lows.",takeaway:"Near-perfect compliance, fakeout result. Variance.",flags:[]},
+  {id:11,dateSort:"2026-04-22",date:"4/22",ticker:"QQQ 648 APR 22 P",result:6,outcome:"win",score:68,exitType:"emotional",pnl:31,rules:{r1:1,r2:1,r3:1,r4:1,r5:1,r6:1,r7:0},idea:"NQ QQQ fade off ATH.",entryNotes:"2nd engulfment confirming dump. ATH level.",exitNotes:"Fear-sold 2 contracts at -5%. ATH not broken at exit.",takeaway:"Named the fear. No structural trigger. Trade was still valid when closed.",flags:["Fear exit — no structural trigger"]},
+  {id:12,dateSort:"2026-04-23",date:"4/23",ticker:"PLTR 145 APR 23 C",result:27,outcome:"win",score:82,exitType:"structural",pnl:204,rules:{r1:1,r2:1,r3:1,r4:1,r5:1,r6:1,r7:1},idea:"PLTR pulled back into 143.96 + Daily 50.",entryNotes:"10 min hold at demand. Push over Daily 50. Tight.",exitNotes:"3 TPs scaled. TP3/4 slightly early but conservative.",takeaway:"Clean trade. TP3/4 slightly early but profit locked.",flags:[]},
+  {id:13,dateSort:"2026-04-27",date:"4/27",ticker:"PLTR 140 APR 27 P",result:-13,outcome:"loss",score:88,exitType:"structural",pnl:-114,rules:{r1:1,r2:1,r3:1,r4:1,r5:1,r6:1,r7:1},idea:"Pop and fade into PLTR Daily 50 + 144.67 level.",entryNotes:"Wicks and rejections off Daily 50. Perfect entry.",exitNotes:"Proper 2min close above stop. Fakeout.",takeaway:"Clean process, fakeout result. Variance.",flags:[]},
+  {id:14,dateSort:"2026-04-27",date:"4/27",ticker:"CRCL 192 APR 27 C",result:-19,outcome:"loss",score:72,exitType:"structural",pnl:-190,rules:{r1:0,r2:1,r3:1,r4:1,r5:1,r6:1,r7:1},idea:"Pullback long to Daily 20 and 50/97 key level.",entryNotes:"Slightly overextended. 2nd engulfment after 8 min. Half size.",exitNotes:"Proper 2min close below stop.",takeaway:"Soft rule violation on entry — overextended. Half size correct.",flags:["Entry slightly overextended — soft Rule 1 violation"]}
+];
+
+const STORAGE_KEY='brtr_journal_v3';
+let currentSort='date';
+let pendingTrade=null;
+let calYear=2026,calMonth=3; // 0-indexed, 3=April
+
+function loadTrades(){ try{ const d=localStorage.getItem(STORAGE_KEY); return d?JSON.parse(d):SEED; }catch(e){ return SEED; } }
+function saveTrades(t){ try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(t)); }catch(e){} }
+function scoreColor(s){ return s>=85?'#3dd68c':s>=65?'#ffb347':'#ff5e5e'; }
+function outcomeClass(o){ return o==='win'?'win':o==='loss'?'loss':'be'; }
+function verdictHTML(t){
+  if(t.score>=85) return '<span style="color:#3dd68c;font-size:11px;font-family:var(--mono)">clean</span>';
+  if(t.score>=65) return '<span style="color:#ffb347;font-size:11px;font-family:var(--mono)">minor issues</span>';
+  return '<span style="color:#ff5e5e;font-size:11px;font-family:var(--mono)">violations</span>';
+}
+function parseDateSort(ds){ if(!ds) return 0; const m=ds.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(!m) return new Date(ds).getTime(); return new Date(parseInt(m[1]),parseInt(m[2])-1,parseInt(m[3])).getTime(); }
+function sortTrades(trades,mode){
+  const arr=[...trades];
+  if(mode==='date') return arr.sort((a,b)=>parseDateSort(b.dateSort)-parseDateSort(a.dateSort));
+  if(mode==='score') return arr.sort((a,b)=>b.score-a.score);
+  if(mode==='result') return arr.sort((a,b)=>b.result-a.result);
+  return arr;
+}
+function setSort(mode){
+  currentSort=mode;
+  ['date','score','result'].forEach(m=>{ const b=document.getElementById('sort-'+m+'-btn'); b.classList.toggle('active',m===mode); b.textContent=m.toUpperCase()+(m===mode&&mode==='date'?' ↓':''); });
+  buildRows(sortTrades(loadTrades(),mode),'all-tbody');
+}
+
+const ruleLabels={r1:'tight',r2:'2+RR',r3:'4min',r4:'level',r5:'mkt gate',r6:'TPs',r7:'struct exit'};
+const ruleFullLabels={r1:'Tight entry',r2:'2+ RR',r3:'4 min hold',r4:'Level respected',r5:'Market gate',r6:'TPs pre-set',r7:'Structural exit'};
+const ruleReasons={r1:'entry tightness',r2:'RR and TP marking',r3:'hold time and confirmation',r4:'prior level respect',r5:'NQ/ES/SPY/QQQ context',r6:'pre-entry TP levels',r7:'exit trigger type'};
+
+function buildRows(trades,tbodyId){
+  const tbody=document.getElementById(tbodyId);
+  tbody.innerHTML='';
+  trades.forEach(t=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="color:var(--text3);font-family:var(--mono);font-size:11px">${t.date}</td><td style="font-weight:500">${t.ticker}</td><td><span class="badge badge-${outcomeClass(t.outcome)}">${t.result>0?'+':''}${t.result}%</span></td><td><span class="score-inline" style="color:${scoreColor(t.score)}">${t.score}%</span></td><td style="font-size:12px;color:${t.exitType==='structural'?'var(--text3)':'var(--red)'}">${t.exitType}</td><td>${verdictHTML(t)}</td>`;
+    tr.onclick=()=>toggleDetail(t.id,tbodyId);
+    tbody.appendChild(tr);
+    const dr=document.createElement('tr'); dr.className='detail-row';
+    const dc=document.createElement('td'); dc.colSpan=6;
+    const inner=document.createElement('div'); inner.className='detail-inner'; inner.id=`detail-${t.id}-${tbodyId}`;
+    inner.innerHTML=`<div class="rule-chips">${Object.entries(t.rules).map(([k,v])=>`<span class="rule-chip ${v?'chip-pass':'chip-fail'}">${ruleLabels[k]}</span>`).join('')}</div><div class="detail-grid"><div><div class="detail-field-lbl">Idea</div><div class="detail-field-val">${t.idea}</div></div><div><div class="detail-field-lbl">Entry</div><div class="detail-field-val">${t.entryNotes}</div></div><div><div class="detail-field-lbl">Exit</div><div class="detail-field-val">${t.exitNotes}</div></div></div><div class="takeaway-box"><strong style="color:var(--text);font-weight:500">Takeaway:</strong> ${t.takeaway}</div>${t.flags&&t.flags.length?'<div style="margin-top:10px">'+t.flags.map(f=>`<div class="flag-item">⚑ ${f}</div>`).join('')+'</div>':''}`;
+    dc.appendChild(inner); dr.appendChild(dc); tbody.appendChild(dr);
+  });
+}
+
+function toggleDetail(id,tbodyId){
+  document.querySelectorAll('.detail-inner').forEach(el=>{ if(el.id!==`detail-${id}-${tbodyId}`) el.classList.remove('open'); });
+  const el=document.getElementById(`detail-${id}-${tbodyId}`); if(el) el.classList.toggle('open');
+}
+
+function renderMetrics(trades){
+  const wins=trades.filter(t=>t.outcome==='win').length;
+  const losses=trades.filter(t=>t.outcome==='loss').length;
+  const avgScore=Math.round(trades.reduce((a,t)=>a+t.score,0)/trades.length);
+  const emotional=trades.filter(t=>t.exitType==='emotional').length;
+  const winPct=Math.round(wins/trades.length*100);
+  const totalPnl=trades.reduce((a,t)=>a+(t.pnl||0),0);
+  document.getElementById('dash-metrics').innerHTML=`
+    <div class="metric-card"><div class="metric-val" style="color:#3dd68c">${wins}</div><div class="metric-lbl">Wins</div></div>
+    <div class="metric-card"><div class="metric-val" style="color:#ff5e5e">${losses}</div><div class="metric-lbl">Losses</div></div>
+    <div class="metric-card"><div class="metric-val">${winPct}%</div><div class="metric-lbl">Win rate</div></div>
+    <div class="metric-card"><div class="metric-val" style="color:${scoreColor(avgScore)}">${avgScore}%</div><div class="metric-lbl">Avg compliance</div></div>
+    <div class="metric-card"><div class="metric-val" style="color:${totalPnl>=0?'#3dd68c':'#ff5e5e'}">${totalPnl>=0?'+':''}$${Math.abs(totalPnl)}</div><div class="metric-lbl">Total P&amp;L</div></div>`;
+  document.getElementById('dash-sub').textContent=`${trades.length} trades logged`;
+  document.getElementById('all-sub').textContent=`${trades.length} trades total`;
+}
+
+// CALENDAR
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAY_NAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function calPrev(){ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function calNext(){ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+
+function parseLocalDate(ds){
+  // Avoid UTC timezone shift by parsing as local time
+  const m=ds.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m) return new Date(ds);
+  return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+}
+
+function renderCalendar(){
+  document.getElementById('cal-month-label').textContent=`${MONTH_NAMES[calMonth]} ${calYear}`;
+  const trades=loadTrades();
+  // dayMap keyed by full date string YYYY-MM-DD so we can include prev/next month days
+  const dayMap={};
+  trades.forEach(t=>{
+    if(!t.dateSort) return;
+    if(!dayMap[t.dateSort]) dayMap[t.dateSort]={pnl:0,trades:[]};
+    dayMap[t.dateSort].pnl+=(t.pnl||0);
+    dayMap[t.dateSort].trades.push(t);
+  });
+  const grid=document.getElementById('cal-grid');
+  grid.style.gridTemplateColumns='repeat(7,1fr)';
+  grid.innerHTML='';
+  DAY_NAMES.forEach(d=>{ const h=document.createElement('div'); h.className='cal-day-header'; h.textContent=d; grid.appendChild(h); });
+
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const daysInPrev=new Date(calYear,calMonth,0).getDate();
+  const today=new Date();
+
+  // Track weeks for summary
+  const weeks=[];
+  let currentWeek={pnl:0,wins:0,losses:0,trades:0,startDay:null,endDay:null,startMonth:null,endMonth:null};
+
+  let dayCount=0;
+
+  function makeKey(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
+  function makeCell(year,mon,d,isOther){
+    const key=makeKey(year,mon,d);
+    const dayData=dayMap[key];
+    const isToday=today.getFullYear()===year&&today.getMonth()===mon&&today.getDate()===d;
+    const cell=document.createElement('div');
+    cell.className='cal-cell'+(isOther?' other-month':'')+(isToday?' today':'')+(dayData?' has-trade':'');
+    let html=`<div class="cal-date${isToday?' today-num':''}">${d}</div>`;
+    if(dayData){
+      const {pnl,trades:dt}=dayData;
+      // include in current week summary
+      currentWeek.pnl+=pnl;
+      currentWeek.trades+=dt.length;
+      currentWeek.wins+=dt.filter(t=>t.outcome==='win').length;
+      currentWeek.losses+=dt.filter(t=>t.outcome==='loss').length;
+      const pnlSign=pnl>=0?'+':'';
+      html+=`<div class="cal-pnl ${pnl>=0?'pos':'neg'}">${pnlSign}$${Math.abs(pnl)}</div><div class="cal-trade-count">${dt.length} trade${dt.length>1?'s':''}</div>`;
+      cell.onclick=()=>showCalDay(d, dt, isOther?MONTH_NAMES[mon]:null);
+    }
+    cell.innerHTML=html;
+    return cell;
+  }
+
+  // Prev month days (still part of week 1)
+  const prevYear=calMonth===0?calYear-1:calYear;
+  const prevMonth=calMonth===0?11:calMonth-1;
+  for(let i=0;i<firstDay;i++){
+    const day=daysInPrev-firstDay+1+i;
+    if(currentWeek.startDay===null){currentWeek.startDay=day;currentWeek.startMonth=prevMonth;currentWeek.startYear=prevYear;}
+    currentWeek.endDay=day;currentWeek.endMonth=prevMonth;currentWeek.endYear=prevYear;
+    grid.appendChild(makeCell(prevYear,prevMonth,day,true));
+    dayCount++;
+  }
+
+  for(let d=1;d<=daysInMonth;d++){
+    if(currentWeek.startDay===null){currentWeek.startDay=d;currentWeek.startMonth=calMonth;currentWeek.startYear=calYear;}
+    currentWeek.endDay=d;currentWeek.endMonth=calMonth;currentWeek.endYear=calYear;
+    grid.appendChild(makeCell(calYear,calMonth,d,false));
+    dayCount++;
+
+    if(dayCount%7===0||d===daysInMonth){
+      // pad next-month days for last week
+      if(d===daysInMonth && dayCount%7!==0){
+        const nextYear=calMonth===11?calYear+1:calYear;
+        const nextMonth=calMonth===11?0:calMonth+1;
+        const remaining=7-(dayCount%7);
+        for(let r=1;r<=remaining;r++){
+          currentWeek.endDay=r;currentWeek.endMonth=nextMonth;currentWeek.endYear=nextYear;
+          grid.appendChild(makeCell(nextYear,nextMonth,r,true));
+          dayCount++;
+        }
+      }
+      weeks.push({...currentWeek});
+      currentWeek={pnl:0,wins:0,losses:0,trades:0,startDay:null,endDay:null,startMonth:null,endMonth:null,startYear:null,endYear:null};
+    }
+  }
+
+  // render weekly summary list
+  const wsList=document.getElementById('cal-week-summary-list');
+  const tradedWeeks=weeks.filter(w=>w.trades>0);
+  if(tradedWeeks.length===0){
+    wsList.innerHTML='<div style="font-size:12px;color:var(--text3);padding:10px 0">No trades logged this month.</div>';
+  } else {
+    wsList.innerHTML=tradedWeeks.map((w,i)=>{
+      const pnlSign=w.pnl>=0?'+':'';
+      const pnlColor=w.pnl>=0?'var(--green)':'var(--red)';
+      const startMonName=MONTH_NAMES[w.startMonth].slice(0,3);
+      const endMonName=MONTH_NAMES[w.endMonth].slice(0,3);
+      const range=w.startMonth===w.endMonth?`${startMonName} ${w.startDay}–${w.endDay}`:`${startMonName} ${w.startDay} – ${endMonName} ${w.endDay}`;
+      const weekIdx=weeks.indexOf(w)+1;
+      return `<div class="week-summary-row">
+        <div><div class="week-stat-lbl">Week ${weekIdx}</div><div class="week-range">${range}</div></div>
+        <div><div class="week-stat-lbl">P&amp;L</div><div class="week-stat" style="color:${pnlColor}">${pnlSign}$${Math.abs(w.pnl)}</div></div>
+        <div><div class="week-stat-lbl">Trades</div><div class="week-stat">${w.trades}</div></div>
+        <div><div class="week-stat-lbl">Record</div><div class="week-stat" style="color:${w.wins>w.losses?'var(--green)':w.losses>w.wins?'var(--red)':'var(--text2)'}">${w.wins}W ${w.losses}L</div></div>
+      </div>`;
+    }).join('');
+  }
+
+  // monthly summary - aggregate trades that actually fell in calMonth
+  const monthTrades=trades.filter(t=>{
+    if(!t.dateSort) return false;
+    const d=parseLocalDate(t.dateSort);
+    return d.getFullYear()===calYear && d.getMonth()===calMonth;
+  });
+  const msEl=document.getElementById('cal-month-summary-card');
+  if(monthTrades.length===0){
+    msEl.innerHTML='<div style="font-size:12px;color:var(--text3);padding:10px 0">No trades logged in this month.</div>';
+  } else {
+    const mPnl=monthTrades.reduce((a,t)=>a+(t.pnl||0),0);
+    const mWins=monthTrades.filter(t=>t.outcome==='win').length;
+    const mLosses=monthTrades.filter(t=>t.outcome==='loss').length;
+    const mBE=monthTrades.filter(t=>t.outcome==='be').length;
+    const mAvgScore=Math.round(monthTrades.reduce((a,t)=>a+t.score,0)/monthTrades.length);
+    const mWinRate=monthTrades.length?Math.round(mWins/monthTrades.length*100):0;
+    const mEmotional=monthTrades.filter(t=>t.exitType==='emotional').length;
+    const pnlSign=mPnl>=0?'+':'';
+    const pnlColor=mPnl>=0?'var(--green)':'var(--red)';
+    msEl.innerHTML=`<div class="week-summary-row" style="grid-template-columns:1fr 110px 110px 110px 110px 110px">
+      <div><div class="week-stat-lbl">${MONTH_NAMES[calMonth]} ${calYear}</div><div class="week-range">${monthTrades.length} trades</div></div>
+      <div><div class="week-stat-lbl">P&amp;L</div><div class="week-stat" style="color:${pnlColor}">${pnlSign}$${Math.abs(mPnl)}</div></div>
+      <div><div class="week-stat-lbl">Win rate</div><div class="week-stat">${mWinRate}%</div></div>
+      <div><div class="week-stat-lbl">Record</div><div class="week-stat" style="color:${mWins>mLosses?'var(--green)':mLosses>mWins?'var(--red)':'var(--text2)'}">${mWins}W ${mLosses}L${mBE?' '+mBE+'BE':''}</div></div>
+      <div><div class="week-stat-lbl">Avg score</div><div class="week-stat" style="color:${scoreColor(mAvgScore)}">${mAvgScore}%</div></div>
+      <div><div class="week-stat-lbl">Emotional</div><div class="week-stat" style="color:${mEmotional>0?'var(--red)':'var(--green)'}">${mEmotional} exits</div></div>
+    </div>`;
+  }
+
+  document.getElementById('cal-day-detail').style.display='none';
+}
+
+function showCalDay(day, trades, monthOverride){
+  const label=document.getElementById('cal-detail-label');
+  const mn=monthOverride||MONTH_NAMES[calMonth];
+  label.textContent=`${mn} ${day} — ${trades.length} trade${trades.length>1?'s':''}`;
+  const tbody=document.getElementById('cal-detail-tbody');
+  tbody.innerHTML='';
+  trades.forEach(t=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-weight:500">${t.ticker}</td><td><span class="badge badge-${outcomeClass(t.outcome)}">${t.result>0?'+':''}${t.result}%</span></td><td><span class="score-inline" style="color:${scoreColor(t.score)}">${t.score}%</span></td><td style="font-size:12px;color:${t.exitType==='structural'?'var(--text3)':'var(--red)'}">${t.exitType}</td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('cal-day-detail').style.display='block';
+  document.getElementById('cal-day-detail').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function renderPatterns(trades){
+  const wins=trades.filter(t=>t.outcome==='win');
+  const losses=trades.filter(t=>t.outcome==='loss');
+  const avgWS=wins.length?Math.round(wins.reduce((a,t)=>a+t.score,0)/wins.length):0;
+  const avgLS=losses.length?Math.round(losses.reduce((a,t)=>a+t.score,0)/losses.length):0;
+  const ruleKeys=['r1','r2','r3','r4','r5','r6','r7'];
+  const ruleNames={r1:'Tight entry',r2:'2+ RR',r3:'4 min hold',r4:'Level respected',r5:'Market gate',r6:'TPs pre-set',r7:'Structural exit'};
+  const stats=ruleKeys.map(r=>{const p=trades.filter(t=>t.rules[r]).length;return{label:ruleNames[r],pct:Math.round(p/trades.length*100)};});
+  const worst=[...stats].sort((a,b)=>a.pct-b.pct)[0];
+  const emotional=trades.filter(t=>t.exitType==='emotional').length;
+  const cleanLosses=trades.filter(t=>t.outcome==='loss'&&t.score>=80).length;
+  document.getElementById('patterns-content').innerHTML=`
+    <div class="patterns-grid">
+      <div class="patterns-card"><div class="patterns-card-title">Wins — avg ${avgWS}% compliance</div>${['r1','r3','r5','r7'].map(r=>{const p=wins.filter(t=>t.rules[r]).length;const c=p===wins.length?'var(--green)':p>wins.length/2?'var(--amber)':'var(--red)';return`<div class="pitem"><span>${ruleNames[r]}</span><span style="color:${c};font-family:var(--mono)">${p}/${wins.length}</span></div>`;}).join('')}</div>
+      <div class="patterns-card"><div class="patterns-card-title">Losses — avg ${avgLS}% compliance</div>${['r1','r5','r3','r7'].map(r=>{const p=losses.filter(t=>t.rules[r]).length;const c=p===losses.length?'var(--green)':p>losses.length/2?'var(--amber)':'var(--red)';return`<div class="pitem"><span>${ruleNames[r]}</span><span style="color:${c};font-family:var(--mono)">${p}/${losses.length}</span></div>`;}).join('')}</div>
+    </div>
+    <div class="patterns-card" style="margin-bottom:16px"><div class="patterns-card-title">Rule compliance — all trades</div>${stats.map(s=>`<div class="compliance-row"><span class="compliance-name">${s.label}</span><div class="compliance-bar-bg"><div class="compliance-bar-fill" style="width:${s.pct}%;background:${scoreColor(s.pct)}"></div></div><span class="compliance-pct" style="color:${scoreColor(s.pct)}">${s.pct}%</span></div>`).join('')}</div>
+    <div class="section-label" style="margin-bottom:10px">Key insights</div>
+    <div class="insight-card" style="border-color:var(--red)"><strong>Biggest gap: ${worst.label}</strong> — ${worst.pct}% compliance. Focus here first.</div>
+    <div class="insight-card" style="border-color:var(--red)"><strong>Emotional exits: ${emotional}/${trades.length} trades.</strong> ${emotional>4?'Still the primary P&L leak.':'Trending in the right direction.'}</div>
+    <div class="insight-card" style="border-color:var(--amber)"><strong>Win/loss compliance gap: ${avgWS-avgLS}%.</strong> Wins avg ${avgWS}% vs losses at ${avgLS}%.</div>
+    <div class="insight-card" style="border-color:var(--green)"><strong>Clean losses: ${cleanLosses}.</strong> High-compliance losses are variance — do not adjust the model.</div>`;
+}
+
+// PARSE
+async function parseReview(){
+  const raw=document.getElementById('raw-input').value.trim();
+  if(!raw){document.getElementById('parse-status').textContent='Paste a review first.';return;}
+  document.getElementById('parse-status').textContent='';
+  document.getElementById('loading-msg').style.display='block';
+  document.getElementById('parse-btn').disabled=true;
+  document.getElementById('preview-box').classList.remove('open');
+  const prompt=`You are a trading journal parser. Extract and score a trade review against the Break & Retest model.
+
+TRADE REVIEW:
+${raw}
+
+SCORING RULES (1=pass, 0=fail):
+r1 Tight entry: tight with stop at level, minimal drawdown. Fail if overextended/loose/FOMO/chased.
+r2 2+ RR pre-marked: TP levels identified before entry. Fail if no TPs or RR flawed.
+r3 4 min+ confirmation: level held 4+ minutes. Score 0 if "early" without hold time.
+r4 Level had prior respect: prior reaction/rejection mentioned.
+r5 Market correlation: NQ/ES/SPY/QQQ context mentioned.
+r6 TPs pre-marked: TPs set at liquidity zones before entry.
+r7 Structural exit: stop/TP/trail only. Fail if closed early/fear/avoid red day.
+
+Also extract: ticker, date (M/D format), avg result % (average all sell %s), outcome (win/>2%, loss/<-1%, be otherwise), exit_type, pnl (estimate dollar P&L if contract prices visible, else 0), idea, entry_notes, exit_notes, takeaway, flags array.
+
+Respond ONLY with valid JSON:
+{"ticker":"","date":"","result":0,"outcome":"win","exit_type":"structural","pnl":0,"rules":{"r1":1,"r2":1,"r3":1,"r4":1,"r5":1,"r6":1,"r7":1},"score":0,"idea":"","entry_notes":"","exit_notes":"","takeaway":"","flags":[]}`;
+  try{
+    const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
+    const data=await resp.json();
+    const text=data.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(text);
+    parsed.score=Math.round(Object.values(parsed.rules).filter(v=>v===1).length/7*100);
+    pendingTrade=parsed;
+    showPreview(parsed);
+  }catch(e){
+    document.getElementById('parse-status').textContent='Parse failed — check text and try again.';
+  }
+  document.getElementById('loading-msg').style.display='none';
+  document.getElementById('parse-btn').disabled=false;
+}
+
+function showPreview(p){
+  document.getElementById('preview-meta').innerHTML=`<div class="pmeta"><div class="pmeta-val">${p.ticker||'—'}</div><div class="pmeta-lbl">Ticker</div></div><div class="pmeta"><div class="pmeta-val">${p.date||'—'}</div><div class="pmeta-lbl">Date</div></div><div class="pmeta"><div class="pmeta-val" style="color:${p.result>0?'var(--green)':'var(--red)'}">${p.result>0?'+':''}${p.result}%</div><div class="pmeta-lbl">Result</div></div><div class="pmeta"><div class="pmeta-val" style="color:${scoreColor(p.score)}">${p.score}%</div><div class="pmeta-lbl">Score</div></div>`;
+  document.getElementById('preview-rules').innerHTML=Object.entries(p.rules).map(([k,v])=>`<div class="rule-score-row"><span>${ruleFullLabels[k]}</span><span class="rule-reason">${ruleReasons[k]}</span><span class="badge ${v?'badge-pass':'badge-fail'}">${v?'pass':'fail'}</span></div>`).join('');
+  const bar=document.getElementById('preview-score-bar'); bar.style.width=p.score+'%'; bar.style.background=scoreColor(p.score);
+  document.getElementById('preview-score-num').textContent=p.score+'%'; document.getElementById('preview-score-num').style.color=scoreColor(p.score);
+  document.getElementById('preview-idea').textContent=p.idea||'—';
+  document.getElementById('preview-entry').textContent=p.entry_notes||'—';
+  document.getElementById('preview-exit').textContent=p.exit_notes||'—';
+  document.getElementById('preview-takeaway').textContent=p.takeaway||'—';
+  document.getElementById('preview-flags').innerHTML=p.flags&&p.flags.length?p.flags.map(f=>`<div class="flag-item">⚑ ${f}</div>`).join(''):'<div style="font-size:11px;color:var(--green)">No flags — clean review.</div>';
+  document.getElementById('preview-box').classList.add('open');
+}
+
+function confirmSave(){
+  if(!pendingTrade)return;
+  const trades=loadTrades();
+  const dateStr=pendingTrade.date||'';
+  let dateSort='2026-01-01';
+  const m=dateStr.match(/(\d+)\/(\d+)(?:\/(\d+))?/);
+  if(m){const yr=m[3]?'20'+m[3].slice(-2):'2026';dateSort=`${yr}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;}
+  const t={id:Math.max(...trades.map(t=>t.id))+1,dateSort,date:pendingTrade.date,ticker:pendingTrade.ticker,result:pendingTrade.result,outcome:pendingTrade.outcome,score:pendingTrade.score,exitType:pendingTrade.exit_type,pnl:pendingTrade.pnl||0,rules:Object.fromEntries(Object.entries(pendingTrade.rules).map(([k,v])=>[k,v?1:0])),idea:pendingTrade.idea,entryNotes:pendingTrade.entry_notes,exitNotes:pendingTrade.exit_notes,takeaway:pendingTrade.takeaway,flags:pendingTrade.flags||[]};
+  trades.push(t);
+  saveTrades(trades);
+  document.getElementById('save-msg').style.display='inline';
+  setTimeout(()=>document.getElementById('save-msg').style.display='none',2500);
+  clearPreview();
+  render();
+  renderCalendar();
+}
+
+function clearPreview(){
+  document.getElementById('raw-input').value='';
+  document.getElementById('preview-box').classList.remove('open');
+  document.getElementById('parse-status').textContent='';
+  pendingTrade=null;
+}
+
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const names=['dashboard','calendar','trades','log','patterns'];
+  document.querySelectorAll('.nav-item')[names.indexOf(name)].classList.add('active');
+  if(name==='calendar') renderCalendar();
+}
+
+function render(){
+  const trades=loadTrades();
+  saveTrades(trades);
+  renderMetrics(trades);
+  buildRows(sortTrades(trades,'date'),'dash-tbody');
+  buildRows(sortTrades(trades,currentSort),'all-tbody');
+  renderPatterns(trades);
+}
+
+function exportJournal(){
+  const trades=loadTrades();
+  const blob=new Blob([JSON.stringify(trades,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const today=new Date().toISOString().split('T')[0];
+  a.href=url; a.download=`trade_journal_${today}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importJournal(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!Array.isArray(data)) throw new Error('Invalid format');
+      if(!confirm(`Import ${data.length} trades? This will replace your current journal.`)) return;
+      saveTrades(data);
+      render();
+      if(document.getElementById('page-calendar').classList.contains('active')) renderCalendar();
+      alert('Imported '+data.length+' trades.');
+    }catch(err){ alert('Import failed: '+err.message); }
+  };
+  reader.readAsText(file);
+  input.value='';
+}
+
+function resetJournal(){
+  if(!confirm('Reset journal to default seed data? This cannot be undone.')) return;
+  if(!confirm('Are you sure? All your logged trades will be lost.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  render();
+  if(document.getElementById('page-calendar').classList.contains('active')) renderCalendar();
+}
+
+render();
+</script>
+</body>
+</html>
