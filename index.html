@@ -48,6 +48,45 @@
   .chip-pass{background:var(--green-dim);color:var(--green)}.chip-fail{background:var(--red-dim);color:var(--red)}
   .takeaway-box{background:var(--bg2);border-left:2px solid var(--blue);border-radius:0 6px 6px 0;padding:10px 14px;font-size:12px;color:var(--text2);line-height:1.6}
   .flag-item{font-size:11px;color:var(--amber);padding:2px 0}
+  .delete-trade-btn{background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:4px;padding:5px 10px;font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:.05em;transition:all .15s;margin-top:8px}
+  .delete-trade-btn:hover{color:var(--red);border-color:var(--red)}
+  /* MODEL PAGE */
+  .model-toc{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px 20px}
+  .model-toc-link{font-size:12px;color:var(--text2);text-decoration:none;padding:3px 0;cursor:pointer;transition:color .15s}
+  .model-toc-link:hover{color:var(--blue)}
+  .model-section{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:24px 28px;margin-bottom:16px;scroll-margin-top:24px}
+  .model-section h2{font-family:var(--mono);font-size:14px;color:var(--blue);letter-spacing:.06em;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);font-weight:500;text-transform:uppercase}
+  .model-section h3{font-size:14px;color:var(--text);margin:18px 0 10px;font-weight:500;font-family:var(--sans)}
+  .model-section p{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:10px}
+  .model-section ul{list-style:none;padding-left:0;margin-bottom:12px}
+  .model-section li{font-size:13px;color:var(--text2);line-height:1.7;padding-left:18px;position:relative;margin-bottom:5px}
+  .model-section li::before{content:"\2022";color:var(--blue);position:absolute;left:6px;font-weight:bold}
+  .model-section li.sub{padding-left:36px;color:var(--text3);font-size:12px}
+  .model-section li.sub::before{content:"\25E6";color:var(--text3);left:24px}
+  .model-section strong{color:var(--text);font-weight:500}
+  .model-callout{background:var(--bg3);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:12px 16px;margin:14px 0;font-size:13px;color:var(--text2);font-style:italic;line-height:1.6}
+  .model-callout.warn{border-left-color:var(--amber)}
+  .model-callout.danger{border-left-color:var(--red)}
+  .model-callout.success{border-left-color:var(--green)}
+  .rule-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+  .rule-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+  .rule-table td:first-child{width:36px;font-family:var(--mono);font-weight:500;color:var(--blue);text-align:center}
+  .rule-table tr:last-child td{border-bottom:none}
+  .rule-name{font-weight:500;color:var(--text);font-size:13px;margin-bottom:3px}
+  .rule-tag{display:inline-block;font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:3px;margin-left:8px;letter-spacing:.05em;font-weight:500;vertical-align:middle}
+  .rule-tag-required{background:var(--green-dim);color:var(--green)}
+  .rule-tag-hard{background:var(--red-dim);color:var(--red)}
+  .rule-tag-elev{background:var(--amber-dim);color:var(--amber)}
+  .rule-desc{font-size:12px;color:var(--text3);line-height:1.5;margin-top:4px}
+  .checklist-item{display:grid;grid-template-columns:160px 1fr 100px;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:center}
+  .checklist-item:last-child{border-bottom:none}
+  .checklist-label{font-weight:500;color:var(--text)}
+  .checklist-desc{color:var(--text3)}
+  .checklist-status{font-family:var(--mono);font-size:10px;text-align:center;padding:3px 8px;border-radius:3px;font-weight:500;letter-spacing:.05em}
+  .status-required{background:var(--green-dim);color:var(--green)}
+  .status-hard{background:var(--red-dim);color:var(--red)}
+  .status-elev{background:var(--amber-dim);color:var(--amber)}
+  .status-note{background:var(--blue-dim);color:var(--blue)}
   /* CALENDAR */
   .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
   .cal-month{font-family:var(--mono);font-size:16px;font-weight:500;color:var(--text)}
@@ -136,6 +175,7 @@
       <div class="nav-item" onclick="showPage('trades')"><span class="nav-icon">≡</span> All trades</div>
       <div class="nav-item" onclick="showPage('log')"><span class="nav-icon">+</span> Log trade</div>
       <div class="nav-item" onclick="showPage('patterns')"><span class="nav-icon">◈</span> Patterns</div>
+      <div class="nav-item" onclick="showPage('model')"><span class="nav-icon">◇</span> Trading model</div>
     </div>
     <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px">
       <button class="ghost-btn" style="font-size:10px;padding:6px 10px" onclick="exportJournal()">EXPORT JSON</button>
@@ -236,6 +276,233 @@
       </div>
     </div>
 
+    <!-- TRADING MODEL -->
+    <div id="page-model" class="page">
+      <div class="page-title">Trading model</div>
+      <div class="page-sub">Break &amp; Retest model — the rules every trade is judged against.</div>
+
+      <div class="model-toc">
+        <a class="model-toc-link" onclick="document.getElementById('m-overview').scrollIntoView({behavior:'smooth'})">1. Overview</a>
+        <a class="model-toc-link" onclick="document.getElementById('m-context').scrollIntoView({behavior:'smooth'})">2. Market context</a>
+        <a class="model-toc-link" onclick="document.getElementById('m-levels').scrollIntoView({behavior:'smooth'})">3. Key levels</a>
+        <a class="model-toc-link" onclick="document.getElementById('m-mechanics').scrollIntoView({behavior:'smooth'})">4. Mechanics</a>
+        <a class="model-toc-link" onclick="document.getElementById('m-rules').scrollIntoView({behavior:'smooth'})">5. Entry rules</a>
+        <a class="model-toc-link" onclick="document.getElementById('m-stop').scrollIntoView({behavior:'smooth'})">6. Stop loss</a>
+        <a class="model-toc-link" onclick="document.getElementById('m-exit').scrollIntoView({behavior:'smooth'})">7. Exit &amp; TP</a>
+        <a class="model-toc-link" onclick="document.getElementById('m-risk').scrollIntoView({behavior:'smooth'})">8. Risk mgmt</a>
+        <a class="model-toc-link" onclick="document.getElementById('m-checklist').scrollIntoView({behavior:'smooth'})">9. Checklist</a>
+        <a class="model-toc-link" onclick="document.getElementById('m-mental').scrollIntoView({behavior:'smooth'})">10. Mental framework</a>
+        <a class="model-toc-link" onclick="document.getElementById('m-review').scrollIntoView({behavior:'smooth'})">11. Trade review</a>
+      </div>
+
+      <div class="model-section" id="m-overview">
+        <h2>1. Model Overview</h2>
+        <p>The Break &amp; Retest model is a level-reactive system. Price is not predicted &mdash; it is observed. I wait for price to break a key level, return to it, and demonstrate through its behavior that the level holds. Only then is an entry taken.</p>
+        <div class="model-callout">Core principle: I react to what price does at a level. I do not anticipate. Entry direction is determined by price structure &mdash; not by bias, trend, or expectation.</div>
+        <p>This model trades both sides. Previous support can become resistance; previous rejection can become demand. Counter-trend entries are fully valid when the level is high-trust and the entry is tight. Ticker selection is entirely discretionary &mdash; any name that demonstrates respect for key levels is in play.</p>
+      </div>
+
+      <div class="model-section" id="m-context">
+        <h2>2. Market Context &amp; Correlation</h2>
+        <p>NQ, ES, SPY, and QQQ are required confluence checks before every trade. They function as a gate, not just additive context.</p>
+        <h3>Required pre-trade check</h3>
+        <ul>
+          <li>Assess NQ and ES for overall market direction and key levels before session open</li>
+          <li>SPY and QQQ provide intraday confirmation &mdash; is the broader market respecting or breaking structure?</li>
+          <li>Market alignment with the trade direction adds conviction. Market disagreement requires a stronger level to justify entry.</li>
+          <li>For counter-trend entries: if NQ/ES/SPY/QQQ are in strong directional trend against the trade, the level must be exceptional. Borderline levels in this context are a hard pass.</li>
+        </ul>
+        <div class="model-callout warn">Market correlation is a required gate &mdash; not optional context. If the broader market picture has not been assessed, no entries are taken.</div>
+        <h3>Futures as trade vehicles</h3>
+        <p>NQ and ES are occasionally traded directly when a clear break-and-retest setup presents itself. All entry, confirmation, stop, and exit rules apply identically to futures positions.</p>
+      </div>
+
+      <div class="model-section" id="m-levels">
+        <h2>3. Key Level Identification</h2>
+        <p>A level without prior respect is not a level. Every trade is anchored to a zone where price has previously reacted in a meaningful, identifiable way.</p>
+        <h3>Timeframes</h3>
+        <ul>
+          <li>Level identification: 30-minute and 4-hour charts</li>
+          <li>Intraday structure and trend context: 15-minute chart</li>
+          <li>2-minute chart: the primary trading timeframe &mdash; all entry decisions, confirmation, and stop placement are executed here</li>
+          <li class="sub">The level must show respect on the 2-minute chart. If price is not behaving cleanly at the level on the 2-minute, the entry is not valid regardless of higher timeframe structure.</li>
+          <li>Stop placement: 2-minute close below (long) or above (short) the key level</li>
+        </ul>
+        <h3>What qualifies as a key level</h3>
+        <ul>
+          <li>Prior significant reaction: rejection, breakout, or consolidation zone that is clearly visible</li>
+          <li>EMA confluence: Daily 20, 50, 100, 200 &mdash; alignment with a moving average strengthens the level</li>
+          <li>Session structure: PMH, PML, prior day highs/lows, VWAP</li>
+          <li>4-hour PATH levels and established demand/supply zones</li>
+          <li class="sub">Multiple prior touches increase conviction. A level respected four times is stronger than one respected once.</li>
+          <li class="sub">Cross-timeframe alignment &mdash; level visible and respected on both 30min and 4hr &mdash; is highest priority.</li>
+          <li class="sub">Level must show respect on the 2-minute chart &mdash; clean wicking or consolidation at the level on the execution timeframe is required.</li>
+        </ul>
+        <h3>Ticker selection</h3>
+        <p>Any ticker is in play at full discretion. The only requirement is demonstrated respect for key levels and options contracts that move cleanly enough to trade. Familiarity with how a ticker's contracts move &mdash; spread behavior, delta response, fill quality &mdash; determines position sizing, not eligibility.</p>
+        <ul>
+          <li>Full size: tickers whose contract movement and fill behavior are well understood</li>
+          <li>Reduced size (50&ndash;75%): first trades on a name, or after a period away from it</li>
+          <li>Wide spreads change effective RR &mdash; always factor spread into sizing and TP calculation before entry</li>
+        </ul>
+      </div>
+
+      <div class="model-section" id="m-mechanics">
+        <h2>4. Trade Mechanics</h2>
+        <h3>Step 1 &mdash; The Break</h3>
+        <p>Wait for price to make a clear, decisive break through a key level. The break is setup identification only. No entry is taken here.</p>
+        <h3>Step 2 &mdash; The Retest</h3>
+        <p>Price must return to the broken level and demonstrate that the level holds. Confirmation is observed on the 2-minute chart.</p>
+        <ul>
+          <li>Standard: minimum 4 minutes of level holding</li>
+          <li>Exception: sub-4 minutes is allowed only when the level is very high-trust &mdash; multiple prior touches, strong prior reaction &mdash; AND the entry is exceptionally tight</li>
+          <li class="sub">This exception exists for situations where waiting for full confirmation means losing the entry entirely. It is not a shortcut for weak setups.</li>
+          <li>Confirmation signals: wicking at the level, doji candles, failed breakdowns or breakouts, consolidation</li>
+          <li>Additional retests strengthen the setup &mdash; the more a level is tested and holds, the higher the conviction</li>
+        </ul>
+        <div class="model-callout warn">The 4-minute hold rule filters fakeouts and liquidity sweeps. Every time it is bypassed without a genuinely strong level behind it, it costs capital.</div>
+        <h3>Step 3 &mdash; Entry</h3>
+        <p>Entry is triggered on the engulfing candle confirming rejection or reclaim of the level, after confirmation criteria are met.</p>
+        <ul>
+          <li>Tight entry: stop is placed at the level, targeting minimal drawdown from entry</li>
+          <li>Entry is off the engulfing candle &mdash; not chased after it has extended</li>
+          <li>The reason to enter must be nameable before the order is placed: wicking, doji, consolidation, or confirmed reclaim</li>
+        </ul>
+      </div>
+
+      <div class="model-section" id="m-rules">
+        <h2>5. Entry Rules</h2>
+        <table class="rule-table">
+          <tr><td>1</td><td><div class="rule-name">Tight entry required<span class="rule-tag rule-tag-hard">NON-NEGOTIABLE</span></div><div class="rule-desc">Stop is placed at the key level with minimal drawdown from entry. If the entry is not tight, the trade is not valid. No exceptions.</div></td></tr>
+          <tr><td>2</td><td><div class="rule-name">2+ Risk/Reward<span class="rule-tag rule-tag-required">REQUIRED</span></div><div class="rule-desc">TP1 must be pre-marked on the chart before entry. If a clear 2R target cannot be identified, skip the trade.</div></td></tr>
+          <tr><td>3</td><td><div class="rule-name">Confirmation at level<span class="rule-tag rule-tag-required">REQUIRED</span></div><div class="rule-desc">Minimum 4 minutes of level holding via wicking, doji, or consolidation on the 2-minute chart. Exception: sub-4min allowed only when the level is very high-trust (multiple prior touches) AND entry is exceptionally tight. Not a shortcut.</div></td></tr>
+          <tr><td>4</td><td><div class="rule-name">Level must have prior respect<span class="rule-tag rule-tag-required">REQUIRED</span></div><div class="rule-desc">Clear prior reaction on the 30min or 4hr chart &mdash; and confirmed respect on the 2-minute chart, the execution timeframe.</div></td></tr>
+          <tr><td>5</td><td><div class="rule-name">Market correlation checked<span class="rule-tag rule-tag-required">REQUIRED GATE</span></div><div class="rule-desc">NQ, ES, SPY, and QQQ assessed before entry. Market direction against the trade requires a stronger level to justify it.</div></td></tr>
+          <tr><td>6</td><td><div class="rule-name">Counter-trend: elevated threshold<span class="rule-tag rule-tag-elev">HIGHER BAR</span></div><div class="rule-desc">Counter-trend entries are valid &mdash; but the level must be high-trust and the entry must be tight. Borderline levels against a strong trend are a hard pass.</div></td></tr>
+          <tr><td>7</td><td><div class="rule-name">Near news: scalping at discretion<span class="rule-tag rule-tag-elev">ELEVATED RISK</span></div><div class="rule-desc">Short-duration scalps before high-impact news events are permitted at full discretion. Elevated-risk situation &mdash; size accordingly and know the exit before entry. Default: no new standard retest entries within 30 min of red-folder news.</div></td></tr>
+        </table>
+      </div>
+
+      <div class="model-section" id="m-stop">
+        <h2>6. Stop Loss</h2>
+        <p>The stop defines the exact point where the trade idea is invalidated. It is defined before entry and is never moved against the position.</p>
+        <h3>Standard stop</h3>
+        <ul>
+          <li>Trigger: 2-minute close below the key level (long) or above the key level (short)</li>
+          <li>This is the invalidation point &mdash; price has disproven the setup</li>
+        </ul>
+        <h3>Allowed stop adjustments</h3>
+        <ul>
+          <li>Move to breakeven after TP1 is hit &mdash; always valid, eliminates downside on runners</li>
+          <li>Trailing stop on 8EMA 2-minute close &mdash; valid at any point as a structural trade management tool</li>
+          <li>Price structure trailing using HH/HL (longs) or LH/LL (shorts) &mdash; use whichever structure price is currently respecting</li>
+        </ul>
+        <div class="model-callout">Stop adjustments are structural trade management decisions made based on price behavior. They are completely separate from the daily loss rule and have nothing to do with closing early.</div>
+      </div>
+
+      <div class="model-section" id="m-exit">
+        <h2>7. Exit &amp; Take Profit</h2>
+        <h3>Structured exit rule</h3>
+        <p>Every exit must be triggered by one of the following structural conditions. Any close outside of these is an emotional exit and a rule violation.</p>
+        <table class="rule-table">
+          <tr><td style="color:var(--green)">&#10003;</td><td><div class="rule-name">Stop hit at invalidation level</div><div class="rule-desc">2-minute close beyond the key level &mdash; trade idea is invalidated.</div></td></tr>
+          <tr><td style="color:var(--green)">&#10003;</td><td><div class="rule-name">Take profit level reached</div><div class="rule-desc">Price reaches a pre-marked TP level. Scale or close according to the plan set before entry.</div></td></tr>
+          <tr><td style="color:var(--green)">&#10003;</td><td><div class="rule-name">Trailing stop triggered</div><div class="rule-desc">8EMA 2-minute close, price structure trail (HH/HL or LH/LL), or breakeven stop hit on a runner. The trail mechanism was pre-committed before or during the trade &mdash; not invented in the moment.</div></td></tr>
+          <tr><td style="color:var(--red)">&times;</td><td><div class="rule-name">Closing out of P&amp;L anxiety</div><div class="rule-desc">Manually closing a position because it is profitable and you are nervous &mdash; without a structural trigger. This is the primary documented P&amp;L leak.</div></td></tr>
+          <tr><td style="color:var(--red)">&times;</td><td><div class="rule-name">Closing to avoid a potential loss</div><div class="rule-desc">Exiting before the stop is hit because the trade "feels" like it is going wrong. If the stop has not been hit, the idea has not been invalidated.</div></td></tr>
+        </table>
+        <h3>Take profit structure</h3>
+        <ul>
+          <li>TP1, TP2, and TP3 are marked on the chart before entry &mdash; based on prior liquidity zones, not percentage targets</li>
+          <li>After TP1 is hit: move stop to breakeven, let remaining position run to TP2/TP3</li>
+          <li>Partial scales at each TP level are valid &mdash; the runner stays in until a structural exit triggers</li>
+        </ul>
+        <h3>Time-of-day rule (0DTE)</h3>
+        <p>On 0DTE positions, theta decay accelerates materially after 11:15 AM ET. The exit mechanism shifts accordingly.</p>
+        <ul>
+          <li>Before 11:15 AM: hold to pre-marked TP levels unless a structural stop triggers first</li>
+          <li>After 11:15 AM on 0DTE: 8EMA trailing stop (2-min close) becomes the primary exit &mdash; time decay is now working against holding for a distant TP</li>
+          <li>Longer-dated contracts: this cutoff is less relevant &mdash; decay is slower and TP levels can be held later in the session</li>
+        </ul>
+        <div class="model-callout">The 11:15 rule is a pre-committed switch of exit mechanism based on time and decay math &mdash; not an emotional close. It is a structured exit.</div>
+      </div>
+
+      <div class="model-section" id="m-risk">
+        <h2>8. Risk Management</h2>
+        <h3>Daily loss rule</h3>
+        <div class="model-callout danger">
+          <strong>One loss = done for the day.</strong><br>
+          If a trade closes at a loss, no new entries are taken for the remainder of the session. Any open positions are managed to plan only &mdash; stops, trails, and TPs remain active.<br><br>
+          This rule is completely separate from stop and trail management. A trailing stop triggering on a winner is not a loss. A stop being moved to breakeven is not a loss. The daily loss rule applies only when a position closes negative.
+        </div>
+        <h3>Position sizing</h3>
+        <ul>
+          <li>Full size: high-conviction setups on tickers whose contract behavior is well understood</li>
+          <li>Monday: 75% of standard &mdash; trading on prior week data before fresh price discovery is established. Full size only when a clear new level has printed that morning.</li>
+          <li>0DTE: 60&ndash;75% size, given elevated gamma and decay risk</li>
+          <li>New or unfamiliar ticker: reduced size until spread behavior, fill quality, and delta response are understood</li>
+          <li>Wide spreads: factor spread into effective RR before entry. If spread materially changes the math, size down or skip.</li>
+        </ul>
+        <p>There is no secondary dollar-based daily loss limit. The defined stop on each trade combined with the one-loss rule constitutes the complete daily risk framework.</p>
+      </div>
+
+      <div class="model-section" id="m-checklist">
+        <h2>9. Pre-Entry Checklist</h2>
+        <p>Run this before every entry. Any required item failing = no trade.</p>
+        <div class="checklist-item"><span class="checklist-label">Market context?</span><span class="checklist-desc">NQ, ES, SPY, QQQ assessed &mdash; direction and key levels noted</span><span class="checklist-status status-required">REQUIRED</span></div>
+        <div class="checklist-item"><span class="checklist-label">Entry tight?</span><span class="checklist-desc">Stop at the level, minimal drawdown from entry</span><span class="checklist-status status-required">REQUIRED</span></div>
+        <div class="checklist-item"><span class="checklist-label">2+ RR?</span><span class="checklist-desc">TP1 pre-marked on chart before entry</span><span class="checklist-status status-required">REQUIRED</span></div>
+        <div class="checklist-item"><span class="checklist-label">Confirmation?</span><span class="checklist-desc">4 min+ hold, or high-trust level with sub-4min exception</span><span class="checklist-status status-required">REQUIRED</span></div>
+        <div class="checklist-item"><span class="checklist-label">Level respected?</span><span class="checklist-desc">Prior reaction on 30min/4hr and confirmed on 2min</span><span class="checklist-status status-required">REQUIRED</span></div>
+        <div class="checklist-item"><span class="checklist-label">TPs set?</span><span class="checklist-desc">TP1/2/3 marked on chart before clicking buy</span><span class="checklist-status status-required">REQUIRED</span></div>
+        <div class="checklist-item"><span class="checklist-label">Already down today?</span><span class="checklist-desc">If yes &mdash; session is over. No new entries.</span><span class="checklist-status status-hard">HARD STOP</span></div>
+        <div class="checklist-item"><span class="checklist-label">Counter-trend?</span><span class="checklist-desc">Level must be high-trust, entry must be tight &mdash; no maybes</span><span class="checklist-status status-elev">HIGHER BAR</span></div>
+        <div class="checklist-item"><span class="checklist-label">Near news?</span><span class="checklist-desc">Scalping allowed at discretion &mdash; know exit, size down</span><span class="checklist-status status-elev">ELEV. RISK</span></div>
+        <div class="checklist-item"><span class="checklist-label">Monday?</span><span class="checklist-desc">75% size unless fresh level has printed this morning</span><span class="checklist-status status-elev">SIZE DOWN</span></div>
+        <div class="checklist-item"><span class="checklist-label">New ticker?</span><span class="checklist-desc">Reduce size until contract behavior is proven</span><span class="checklist-status status-elev">SIZE DOWN</span></div>
+        <div class="checklist-item"><span class="checklist-label">After 11:15 (0DTE)?</span><span class="checklist-desc">8EMA trail is the exit &mdash; not waiting on final TP</span><span class="checklist-status status-note">NOTE</span></div>
+      </div>
+
+      <div class="model-section" id="m-mental">
+        <h2>10. Mental Framework</h2>
+        <h3>What this model is</h3>
+        <ul>
+          <li>Reactive &mdash; I respond to what price does at a level, not what I expect it to do</li>
+          <li>Level-based &mdash; the trade lives or dies on level quality and entry tightness</li>
+          <li>Rules-based &mdash; entry, stop, and TP are fully defined before the trade is on</li>
+          <li>Direction-agnostic &mdash; long or short is determined by price structure, not bias</li>
+        </ul>
+        <h3>What this model is not</h3>
+        <ul>
+          <li>Predictive &mdash; I am not calling where price goes, I am reacting to what it proves</li>
+          <li>Trend-dependent &mdash; counter-trend entries are valid with the right level and tight entry</li>
+          <li>Emotion-driven &mdash; all exits are structural: stop hit, TP hit, or trail triggered</li>
+        </ul>
+        <h3>Known psychological patterns to guard against</h3>
+        <ul>
+          <li>Emotional exits on winners &mdash; the primary documented P&amp;L leak. No manual close without a structural trigger.</li>
+          <li>Emotional bleed &mdash; a loss affecting the next trade. One loss ends the session entirely.</li>
+          <li>FOMO entries &mdash; loose or chased entries after a missed setup. A missed trade costs nothing. A bad entry costs capital.</li>
+          <li>Misusing the sub-4min exception &mdash; it applies to genuinely strong levels only, not to impatience.</li>
+          <li>Borderline counter-trend entries &mdash; if the level needs justification, it is not strong enough.</li>
+        </ul>
+        <div class="model-callout success">A missed trade costs nothing. A bad entry costs capital. When the setup is not clearly there, the trade is not there.</div>
+      </div>
+
+      <div class="model-section" id="m-review">
+        <h2>11. Trade Review Standard</h2>
+        <p>Every trade receives a written review using this format, posted within 24 hours.</p>
+        <ul>
+          <li><strong>IDEA</strong> &mdash; What was the setup? Name the level, direction, and confluence.</li>
+          <li><strong>ENTRY</strong> &mdash; Was it tight? How long did the level hold? What confirmed it?</li>
+          <li><strong>EXIT</strong> &mdash; Was the exit structural (stop, TP, or trail) or emotional? If emotional, what drove it?</li>
+          <li><strong>TAKEAWAY</strong> &mdash; A few sentences covering what worked, what didn&rsquo;t, and what to carry forward.</li>
+        </ul>
+        <div class="model-callout">Honest post-trade review is the feedback loop that makes this model improve. Every rule in this document was derived from reviewing trades that broke earlier versions of it.</div>
+      </div>
+
+    </div>
+
     <!-- PATTERNS -->
     <div id="page-patterns" class="page">
       <div class="page-title">Patterns</div>
@@ -306,7 +573,7 @@ function buildRows(trades,tbodyId){
     const dr=document.createElement('tr'); dr.className='detail-row';
     const dc=document.createElement('td'); dc.colSpan=6;
     const inner=document.createElement('div'); inner.className='detail-inner'; inner.id=`detail-${t.id}-${tbodyId}`;
-    inner.innerHTML=`<div class="rule-chips">${Object.entries(t.rules).map(([k,v])=>`<span class="rule-chip ${v?'chip-pass':'chip-fail'}">${ruleLabels[k]}</span>`).join('')}</div><div class="detail-grid"><div><div class="detail-field-lbl">Idea</div><div class="detail-field-val">${t.idea}</div></div><div><div class="detail-field-lbl">Entry</div><div class="detail-field-val">${t.entryNotes}</div></div><div><div class="detail-field-lbl">Exit</div><div class="detail-field-val">${t.exitNotes}</div></div></div><div class="takeaway-box"><strong style="color:var(--text);font-weight:500">Takeaway:</strong> ${t.takeaway}</div>${t.flags&&t.flags.length?'<div style="margin-top:10px">'+t.flags.map(f=>`<div class="flag-item">⚑ ${f}</div>`).join('')+'</div>':''}`;
+    inner.innerHTML=`<div class="rule-chips">${Object.entries(t.rules).map(([k,v])=>`<span class="rule-chip ${v?'chip-pass':'chip-fail'}">${ruleLabels[k]}</span>`).join('')}</div><div class="detail-grid"><div><div class="detail-field-lbl">Idea</div><div class="detail-field-val">${t.idea}</div></div><div><div class="detail-field-lbl">Entry</div><div class="detail-field-val">${t.entryNotes}</div></div><div><div class="detail-field-lbl">Exit</div><div class="detail-field-val">${t.exitNotes}</div></div></div><div class="takeaway-box"><strong style="color:var(--text);font-weight:500">Takeaway:</strong> ${t.takeaway}</div>${t.flags&&t.flags.length?'<div style="margin-top:10px">'+t.flags.map(f=>`<div class="flag-item">⚑ ${f}</div>`).join('')+'</div>':''}<button class="delete-trade-btn" onclick="event.stopPropagation();deleteTrade(${t.id})">DELETE TRADE</button>`;
     dc.appendChild(inner); dr.appendChild(dc); tbody.appendChild(dr);
   });
 }
@@ -643,9 +910,20 @@ function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  const names=['dashboard','calendar','trades','log','patterns'];
+  const names=['dashboard','calendar','trades','log','patterns','model'];
   document.querySelectorAll('.nav-item')[names.indexOf(name)].classList.add('active');
   if(name==='calendar') renderCalendar();
+}
+
+function deleteTrade(id){
+  const trades=loadTrades();
+  const t=trades.find(x=>x.id===id);
+  if(!t) return;
+  if(!confirm(`Delete ${t.ticker} (${t.date})? This cannot be undone.`)) return;
+  const filtered=trades.filter(x=>x.id!==id);
+  saveTrades(filtered);
+  render();
+  if(document.getElementById('page-calendar').classList.contains('active')) renderCalendar();
 }
 
 function render(){
