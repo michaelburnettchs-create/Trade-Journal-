@@ -659,6 +659,9 @@
       <div class="page-title">Premarket</div>
       <div class="page-sub">Live market data from TradingView — futures, indices, and watchlist for premarket prep.</div>
 
+      <div class="section-label">Market briefing</div>
+      <div id="yf-briefing" style="margin-bottom:24px"></div>
+
       <div class="section-label">Market overview (Yahoo Finance)</div>
       <div id="yf-overview" style="margin-bottom:24px"></div>
 
@@ -1417,9 +1420,30 @@ function loadTvWidget(containerId,scriptSrc,config){
 // ============================
 // YAHOO FINANCE via CORS proxy
 // ============================
-const YF_PROXY='https://corsproxy.io/?';
+const YF_PROXIES=[
+  url=>'https://corsproxy.io/?'+encodeURIComponent(url),
+  url=>'https://api.allorigins.win/raw?url='+encodeURIComponent(url),
+  url=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(url)
+];
 const YF_CACHE_KEY='brtr_yf_cache_v2';
 const YF_CACHE_TTL_MS=5*60*1000; // 5 minutes
+
+// Try each proxy in order until one succeeds
+async function fetchViaProxy(yahooUrl,asText){
+  let lastErr=null;
+  for(let i=0;i<YF_PROXIES.length;i++){
+    try{
+      const proxyUrl=YF_PROXIES[i](yahooUrl);
+      const res=await fetch(proxyUrl);
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      return asText?await res.text():await res.json();
+    }catch(e){
+      lastErr=e;
+      // Try next proxy
+    }
+  }
+  throw new Error('All proxies failed: '+(lastErr?lastErr.message:'unknown'));
+}
 const INDEX_TICKERS=[
   {s:'SPY',d:'S&P 500'},
   {s:'QQQ',d:'Nasdaq 100'},
@@ -1452,10 +1476,7 @@ async function fetchYahooChart(symbol){
   const cached=yfCacheGet('chart:'+symbol);
   if(cached) return cached;
   const yUrl=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y&includePrePost=true`;
-  const proxyUrl=YF_PROXY+encodeURIComponent(yUrl);
-  const response=await fetch(proxyUrl);
-  if(!response.ok) throw new Error('HTTP '+response.status);
-  const json=await response.json();
+  const json=await fetchViaProxy(yUrl,false);
   if(!json.chart||!json.chart.result||!json.chart.result[0]) throw new Error('Invalid response');
   yfCacheSet('chart:'+symbol,json);
   return json;
@@ -1529,6 +1550,87 @@ function fmtPct(v){
 function fmtPrice(v){
   if(v==null||isNaN(v)) return '—';
   return v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+// Pull top market commentary article from Yahoo Finance — display title + paragraph description.
+// Filters for articles whose title or description mentions market/index/tech terms so we surface
+// market-relevant pieces rather than single-stock noise.
+async function renderYahooBriefing(){
+  const container=document.getElementById('yf-briefing');
+  if(!container) return;
+  container.innerHTML='<div class="loading-state">Loading market briefing from Yahoo Finance…</div>';
+
+  const briefingSymbols='^GSPC,^IXIC,^DJI,^RUT,SPY,QQQ';
+  const cacheKey='briefing:'+briefingSymbols;
+  const cached=yfCacheGet(cacheKey);
+
+  function decodeEntities(s){
+    const d=document.createElement('div');
+    d.innerHTML=s;
+    return d.textContent||d.innerText||s;
+  }
+
+  function stripHtml(s){
+    if(!s) return '';
+    const d=document.createElement('div');
+    d.innerHTML=s;
+    return (d.textContent||d.innerText||'').trim();
+  }
+
+  function pickBriefing(items){
+    // Keywords that suggest market-wide commentary rather than single-stock news
+    const marketKeywords=/\b(stock market|market today|wall street|s&p|nasdaq|dow|premarket|pre-market|before the bell|stocks (open|close|rise|fall|jump|drop|edge|set)|futures|sell-?off|rally|index|indices|tech (stocks|sector|rally|sell)|nvidia|magnificent)\b/i;
+    // Score each article: title match + recency
+    const scored=items.map(item=>{
+      const titleMatch=marketKeywords.test(item.title)?2:0;
+      const descMatch=marketKeywords.test(item.description)?1:0;
+      const ageHours=item.pubDate?(Date.now()-new Date(item.pubDate).getTime())/(1000*60*60):24;
+      const recencyScore=Math.max(0,8-ageHours)/8; // 1.0 if just published, 0 if 8h+ old
+      return {item,score:titleMatch+descMatch+recencyScore};
+    });
+    scored.sort((a,b)=>b.score-a.score);
+    return scored[0]?.item||items[0];
+  }
+
+  async function fetchBriefing(){
+    const yUrl=`https://feeds.finance.yahoo.com/rss/2.0/headline?s=${briefingSymbols}&region=US&lang=en-US`;
+    const text=await fetchViaProxy(yUrl,true);
+    const parser=new DOMParser();
+    const xml=parser.parseFromString(text,'application/xml');
+    const items=Array.from(xml.querySelectorAll('item')).slice(0,30).map(it=>({
+      title:decodeEntities(it.querySelector('title')?.textContent||''),
+      link:it.querySelector('link')?.textContent||'',
+      pubDate:it.querySelector('pubDate')?.textContent||'',
+      description:stripHtml(it.querySelector('description')?.textContent||'')
+    }));
+    if(items.length===0) throw new Error('No articles found');
+    const lead=pickBriefing(items);
+    yfCacheSet(cacheKey,lead);
+    return lead;
+  }
+
+  function renderArticle(article){
+    const pubStr=article.pubDate?new Date(article.pubDate).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
+    const body=article.description||'(No description available)';
+    container.innerHTML=`<div class="summary-card">
+      <div style="font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">Yahoo Finance · Top market story</div>
+      <a href="${article.link}" target="_blank" rel="noopener" style="font-size:15px;color:var(--text);text-decoration:none;font-weight:500;display:block;margin-bottom:10px;line-height:1.4">${article.title}</a>
+      <div style="font-size:13px;color:var(--text2);line-height:1.7">${body}</div>
+      <div class="summary-meta">Published ${pubStr} · <a href="${article.link}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none">Read full article →</a> · <a href="javascript:renderYahooBriefing()" style="color:var(--blue);text-decoration:none">refresh</a></div>
+    </div>`;
+  }
+
+  try{
+    const article=cached||await fetchBriefing();
+    renderArticle(article);
+  }catch(err){
+    container.innerHTML=`<div class="error-state">
+      <strong style="color:var(--amber)">Market briefing unavailable</strong><br>
+      ${err.message}<br>
+      <span style="font-size:11px">All CORS proxies failed. Try again in a moment.</span><br>
+      <button class="ghost-btn" style="margin-top:12px" onclick="renderYahooBriefing()">RETRY</button>
+    </div>`;
+  }
 }
 
 async function renderYahooOverview(){
@@ -1634,10 +1736,7 @@ async function renderYahooNews(){
 
   async function fetchAndRender(){
     const yUrl=`https://feeds.finance.yahoo.com/rss/2.0/headline?s=${newsSymbols}&region=US&lang=en-US`;
-    const proxyUrl=YF_PROXY+encodeURIComponent(yUrl);
-    const response=await fetch(proxyUrl);
-    if(!response.ok) throw new Error('HTTP '+response.status);
-    const text=await response.text();
+    const text=await fetchViaProxy(yUrl,true);
     const parser=new DOMParser();
     const xml=parser.parseFromString(text,'application/xml');
     const items=Array.from(xml.querySelectorAll('item')).slice(0,15);
@@ -1786,7 +1885,8 @@ function renderPremarket(){
   if(premarketLoaded) return;
   premarketLoaded=true;
 
-  // 0. Yahoo Finance market overview, top movers, news (via CORS proxy)
+  // 0. Yahoo Finance market briefing, overview, top movers, news (via CORS proxy)
+  renderYahooBriefing();
   renderYahooOverview();
   renderYahooMovers();
   renderYahooNews();
