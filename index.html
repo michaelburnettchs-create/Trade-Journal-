@@ -1418,7 +1418,7 @@ function loadTvWidget(containerId,scriptSrc,config){
 // YAHOO FINANCE via CORS proxy
 // ============================
 const YF_PROXY='https://corsproxy.io/?';
-const YF_CACHE_KEY='brtr_yf_cache_v1';
+const YF_CACHE_KEY='brtr_yf_cache_v2';
 const YF_CACHE_TTL_MS=5*60*1000; // 5 minutes
 const INDEX_TICKERS=[
   {s:'SPY',d:'S&P 500'},
@@ -1467,36 +1467,40 @@ function calcPerformance(chartJson){
   const timestamps=result.timestamp||[];
   const closes=result.indicators?.quote?.[0]?.close||[];
   const current=meta.regularMarketPrice;
-  const previousClose=meta.chartPreviousClose||meta.previousClose;
   const premarket=meta.preMarketPrice;
   const postmarket=meta.postMarketPrice;
+  const marketState=meta.marketState;
 
   const now=new Date();
   const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-  // Monday of this week
+  const todayMs=today.getTime()/1000;
+
+  // Find yesterday's regular session close from the historical data array.
+  // chartPreviousClose is NOT yesterday's close — it's the close from the start of the chart range
+  // (e.g. 1 year ago when range=1y). Walk back through actual daily bars to find the last close strictly
+  // before today's local midnight.
+  function findCloseStrictlyBefore(targetSec){
+    for(let i=closes.length-1;i>=0;i--){
+      if(closes[i]!=null && timestamps[i]<targetSec) return closes[i];
+    }
+    return null;
+  }
+  const yesterdayClose=findCloseStrictlyBefore(todayMs)||meta.previousClose;
+
+  // Monday of this week (week-to-date anchor = close immediately before Monday)
   const dayOfWeek=today.getDay();
   const daysFromMonday=(dayOfWeek+6)%7;
   const monday=new Date(today); monday.setDate(monday.getDate()-daysFromMonday);
   const firstOfMonth=new Date(today.getFullYear(),today.getMonth(),1);
   const firstOfYear=new Date(today.getFullYear(),0,1);
 
-  function lastCloseBefore(target){
-    const targetMs=target.getTime()/1000;
-    let bestClose=null;
-    for(let i=timestamps.length-1;i>=0;i--){
-      if(timestamps[i]<targetMs && closes[i]!=null){
-        bestClose=closes[i]; break;
-      }
-    }
-    return bestClose;
-  }
-  const wtdAnchor=lastCloseBefore(monday)||previousClose;
-  const mtdAnchor=lastCloseBefore(firstOfMonth)||previousClose;
-  const ytdAnchor=lastCloseBefore(firstOfYear)||previousClose;
+  const wtdAnchor=findCloseStrictlyBefore(monday.getTime()/1000)||yesterdayClose;
+  const mtdAnchor=findCloseStrictlyBefore(firstOfMonth.getTime()/1000)||yesterdayClose;
+  const ytdAnchor=findCloseStrictlyBefore(firstOfYear.getTime()/1000)||yesterdayClose;
 
-  const pct=(a,b)=>b?((a-b)/b)*100:null;
-  // Determine current display price — use premarket if available and outside regular hours
-  const marketState=meta.marketState; // PRE, REGULAR, POST, CLOSED
+  const pct=(a,b)=>(b&&a!=null)?((a-b)/b)*100:null;
+
+  // Pick which price to use as "today's effective price" based on session state
   let displayPrice=current;
   let activeSession=null;
   if((marketState==='PRE'||marketState==='PREPRE') && premarket!=null){displayPrice=premarket;activeSession='Premkt';}
@@ -1506,9 +1510,9 @@ function calcPerformance(chartJson){
     symbol:meta.symbol,
     price:displayPrice,
     activeSession,
-    premarketPct:pct(premarket,previousClose),
-    postmarketPct:pct(postmarket,previousClose),
-    dayPct:pct(current,previousClose),
+    premarketPct:pct(premarket,yesterdayClose),
+    postmarketPct:pct(postmarket,yesterdayClose),
+    dayPct:pct(displayPrice,yesterdayClose),
     wtdPct:pct(displayPrice,wtdAnchor),
     mtdPct:pct(displayPrice,mtdAnchor),
     ytdPct:pct(displayPrice,ytdAnchor)
