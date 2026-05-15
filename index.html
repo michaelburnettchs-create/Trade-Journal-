@@ -79,6 +79,11 @@
   .pace-reached{color:var(--green);font-weight:500}
   .tv-mini-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:4px;min-height:240px;overflow:hidden}
   .tv-chart-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:4px;min-height:480px;overflow:hidden}
+  .summary-card{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:10px;padding:18px 22px;margin-bottom:24px;min-height:90px}
+  .summary-text{font-size:13px;color:var(--text);line-height:1.75;white-space:pre-wrap}
+  .summary-meta{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:12px;padding-top:10px;border-top:1px solid var(--border);letter-spacing:.04em}
+  .summary-empty{font-size:12px;color:var(--text3);text-align:center;padding:14px 0;font-style:italic}
+  .summary-edit-box{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:24px}
   /* MODEL PAGE */
   .model-toc{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px 20px}
   .model-toc-link{font-size:12px;color:var(--text2);text-decoration:none;padding:3px 0;cursor:pointer;transition:color .15s}
@@ -637,7 +642,26 @@
       <div class="page-title">Premarket</div>
       <div class="page-sub">Live market data from TradingView — futures, indices, and watchlist for premarket prep.</div>
 
-      <div class="section-label">Futures &amp; key indices</div>
+      <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
+        <span>Market summary</span>
+        <button class="ghost-btn" style="font-size:10px;padding:4px 12px" onclick="toggleSummaryEdit()">EDIT</button>
+      </div>
+      <div class="summary-card">
+        <div id="summary-display"></div>
+      </div>
+      <div id="summary-edit" class="summary-edit-box" style="display:none">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.5">
+          Ask Claude in chat for a premarket summary, then paste it here. Saves to your browser.
+        </div>
+        <textarea id="summary-input" rows="6" placeholder="Paste today's premarket summary — major US news, NQ/ES action, notable watchlist names, premarket movers..."></textarea>
+        <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+          <button class="save-btn" onclick="saveSummaryFromInput()">SAVE SUMMARY</button>
+          <button class="ghost-btn" onclick="toggleSummaryEdit()">CANCEL</button>
+          <button class="ghost-btn" style="color:var(--red)" onclick="clearSummary()">CLEAR</button>
+        </div>
+      </div>
+
+      <div class="section-label">Indices &amp; key tickers</div>
       <div id="tv-ticker-tape" style="margin-bottom:24px"></div>
 
       <div class="section-label">Index charts</div>
@@ -648,9 +672,9 @@
       </div>
 
       <div class="section-label">Watchlist (MAG 7 + core tickers)</div>
-      <div id="tv-watchlist" style="margin-bottom:24px;min-height:380px"></div>
+      <div id="tv-watchlist" style="margin-bottom:24px;min-height:560px"></div>
 
-      <div class="section-label">Economic calendar</div>
+      <div class="section-label">Economic calendar (USD, medium+high impact only)</div>
       <div id="tv-calendar" style="margin-bottom:24px;min-height:500px"></div>
 
       <div class="section-label">Market heatmap</div>
@@ -1361,14 +1385,65 @@ function clearPreview(){
 }
 
 // ============================
-// PREMARKET — TradingView widgets
+// PREMARKET — TradingView widgets + market summary
 // ============================
+const SUMMARY_KEY='brtr_premarket_summary_v1';
 let premarketLoaded=false;
+
+function loadSummary(){ try{ const d=localStorage.getItem(SUMMARY_KEY); return d?JSON.parse(d):null; }catch(e){ return null; } }
+function saveSummary(text){ try{ localStorage.setItem(SUMMARY_KEY,JSON.stringify({text,updated:new Date().toISOString()})); }catch(e){} }
+
+function escapeHtml(s){
+  const d=document.createElement('div');
+  d.textContent=s;
+  return d.innerHTML;
+}
+
+function renderSummary(){
+  const data=loadSummary();
+  const displayEl=document.getElementById('summary-display');
+  if(!displayEl) return;
+  if(data && data.text){
+    const updated=new Date(data.updated).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+    displayEl.innerHTML=`<div class="summary-text">${escapeHtml(data.text)}</div><div class="summary-meta">Updated ${updated}</div>`;
+  } else {
+    displayEl.innerHTML='<div class="summary-empty">No summary yet. Click EDIT and paste today\'s premarket summary from Claude.</div>';
+  }
+}
+
+function toggleSummaryEdit(){
+  const edit=document.getElementById('summary-edit');
+  const isOpen=edit.style.display!=='none';
+  if(isOpen){
+    edit.style.display='none';
+  } else {
+    edit.style.display='block';
+    const data=loadSummary();
+    document.getElementById('summary-input').value=data?data.text:'';
+    document.getElementById('summary-input').focus();
+  }
+}
+
+function saveSummaryFromInput(){
+  const text=document.getElementById('summary-input').value.trim();
+  if(!text) return;
+  saveSummary(text);
+  document.getElementById('summary-edit').style.display='none';
+  renderSummary();
+}
+
+function clearSummary(){
+  if(!confirm('Clear today\'s market summary?')) return;
+  localStorage.removeItem(SUMMARY_KEY);
+  document.getElementById('summary-input').value='';
+  document.getElementById('summary-edit').style.display='none';
+  renderSummary();
+}
 
 function loadTvWidget(containerId,scriptSrc,config){
   const container=document.getElementById(containerId);
   if(!container) return;
-  container.innerHTML=''; // clear any prior render
+  container.innerHTML='';
   const wrapper=document.createElement('div');
   wrapper.className='tradingview-widget-container';
   const innerDiv=document.createElement('div');
@@ -1383,21 +1458,38 @@ function loadTvWidget(containerId,scriptSrc,config){
   container.appendChild(wrapper);
 }
 
+function loadInvestingCalendar(){
+  const container=document.getElementById('tv-calendar');
+  if(!container) return;
+  container.innerHTML='';
+  const iframe=document.createElement('iframe');
+  // Investing.com economic calendar — USD only, medium+high impact only (no yellow folder)
+  // countries=5 → USA, importance=2,3 → medium+high, timeZone=8 → US Eastern
+  iframe.src='https://sslecal2.investing.com/?columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&importance=2,3&features=datepicker,timezone&countries=5&calType=day&timeZone=8&lang=1';
+  iframe.style.width='100%';
+  iframe.style.height='500px';
+  iframe.style.border='1px solid var(--border)';
+  iframe.style.borderRadius='8px';
+  iframe.style.background='var(--bg2)';
+  iframe.allowTransparency='true';
+  container.appendChild(iframe);
+}
+
 function renderPremarket(){
-  if(premarketLoaded) return; // widgets only need to load once per session
+  renderSummary(); // re-render every time so edits show up
+  if(premarketLoaded) return;
   premarketLoaded=true;
 
-  // 1. Ticker tape — futures and key indices
+  // 1. Ticker tape — ETF equivalents of futures (premarket data available) + VIX
   loadTvWidget('tv-ticker-tape','https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js',{
     symbols:[
-      {description:'S&P FUTURES',proName:'CME_MINI:ES1!'},
-      {description:'NASDAQ FUTURES',proName:'CME_MINI:NQ1!'},
-      {description:'DOW FUTURES',proName:'CBOT_MINI:YM1!'},
-      {description:'RUSSELL FUTURES',proName:'CME_MINI:RTY1!'},
+      {description:'S&P 500',proName:'AMEX:SPY'},
+      {description:'Nasdaq 100',proName:'NASDAQ:QQQ'},
+      {description:'Dow Jones',proName:'AMEX:DIA'},
+      {description:'Russell 2000',proName:'AMEX:IWM'},
       {description:'VIX',proName:'CAPITALCOM:VIX'},
-      {description:'SPY',proName:'AMEX:SPY'},
-      {description:'QQQ',proName:'NASDAQ:QQQ'},
-      {description:'IWM',proName:'AMEX:IWM'}
+      {description:'10Y Yield',proName:'TVC:US10Y'},
+      {description:'DXY',proName:'TVC:DXY'}
     ],
     showSymbolLogo:true,
     colorTheme:'dark',
@@ -1407,8 +1499,6 @@ function renderPremarket(){
   });
 
   // 2. Advanced charts for SPY / QQQ / IWM — with 8 EMA, VWAP, daily SMAs
-  // Default to Daily timeframe so SMAs of 20/50/100/200 are daily SMAs (matches the trading model)
-  // Switch timeframes inside the chart if you want intraday view (note: SMAs will then be calculated on intraday bars)
   const advChartBase={
     autosize:true,
     interval:'D',
@@ -1450,13 +1540,18 @@ function renderPremarket(){
     {s:'NASDAQ:NVDA',d:'Nvidia'},
     {s:'NASDAQ:META',d:'Meta'},
     {s:'NASDAQ:TSLA',d:'Tesla'},
+    {s:'NASDAQ:AMD',d:'AMD'},
+    {s:'NASDAQ:AVGO',d:'Broadcom'},
+    {s:'NYSE:TSM',d:'Taiwan Semi'},
     {s:'NASDAQ:PLTR',d:'Palantir'},
     {s:'NASDAQ:NFLX',d:'Netflix'},
     {s:'NYSE:CRCL',d:'Circle'},
     {s:'NASDAQ:SMH',d:'Semis ETF'}
   ];
+  // height auto-sized so every row shows without scroll: header (~50) + rows (~36 each) + padding
+  const watchlistHeight=Math.max(380, 60+WATCHLIST.length*36);
   loadTvWidget('tv-watchlist','https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js',{
-    width:'100%',height:380,
+    width:'100%',height:watchlistHeight,
     symbolsGroups:[{name:'Watchlist',originalName:'Watchlist',symbols:WATCHLIST.map(t=>({name:t.s,displayName:t.d}))}],
     showSymbolLogo:true,
     colorTheme:'dark',
@@ -1464,15 +1559,8 @@ function renderPremarket(){
     locale:'en'
   });
 
-  // 4. Economic calendar
-  loadTvWidget('tv-calendar','https://s3.tradingview.com/external-embedding/embed-widget-events.js',{
-    width:'100%',height:500,
-    colorTheme:'dark',
-    isTransparent:true,
-    locale:'en',
-    importanceFilter:'0,1', // medium and high importance (red folder)
-    countryFilter:'us'
-  });
+  // 4. Economic calendar — Investing.com (USD only, medium+high impact, no yellow folder)
+  loadInvestingCalendar();
 
   // 5. Market heatmap — S&P 500
   loadTvWidget('tv-heatmap','https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js',{
