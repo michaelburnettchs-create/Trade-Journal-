@@ -19,6 +19,7 @@
   .nav-item:hover{color:var(--text);background:rgba(255,255,255,.03)}
   .nav-item.active{color:var(--blue);border-left-color:var(--blue);background:var(--blue-dim)}
   .nav-icon{font-size:14px;width:16px;text-align:center}
+  .nav-divider{padding:14px 20px 6px;font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;margin-top:8px;border-top:1px solid var(--border)}
   .main{margin-left:200px;padding:32px 36px;flex:1;max-width:1200px}
   .page{display:none}.page.active{display:block}
   .page-title{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--text);margin-bottom:4px;letter-spacing:-.02em}
@@ -27,6 +28,7 @@
   .metric-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
   .metric-val{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--text)}
   .metric-lbl{font-size:11px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.06em}
+  .metrics-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
   .section-label{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
   .trade-table{width:100%;border-collapse:collapse}
   .trade-table th{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
@@ -50,6 +52,31 @@
   .flag-item{font-size:11px;color:var(--amber);padding:2px 0}
   .delete-trade-btn{background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:4px;padding:5px 10px;font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:.05em;transition:all .15s;margin-top:8px}
   .delete-trade-btn:hover{color:var(--red);border-color:var(--red)}
+  /* FINANCE-SPECIFIC */
+  .balance-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+  .balance-item{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+  .balance-item.debt{border-left:2px solid var(--red)}
+  .balance-item.asset{border-left:2px solid var(--green)}
+  .balance-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:3px}
+  .balance-val{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--text)}
+  .balance-val.debt{color:var(--red)}
+  .summary-box{background:var(--bg2);border-left:2px solid var(--blue);border-radius:0 6px 6px 0;padding:10px 14px;font-size:12px;color:var(--text2);line-height:1.6;margin-top:10px}
+  .summary-box strong{color:var(--text);font-weight:500}
+  .pace-card{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:24px}
+  .pace-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;gap:12px;flex-wrap:wrap}
+  .pace-title{font-family:var(--mono);font-size:11px;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+  .pace-subtitle{font-size:11px;color:var(--text3);font-family:var(--mono);letter-spacing:.04em}
+  .pace-bar-wrap{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .pace-bar-bg{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+  .pace-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--green));border-radius:4px;transition:width .5s}
+  .pace-pct{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text);min-width:56px;text-align:right}
+  .pace-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .pace-stat{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+  .pace-stat-val{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--text)}
+  .pace-stat-val.target{color:var(--blue)}
+  .pace-stat-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-top:2px}
+  .pace-empty{font-size:12px;color:var(--text3);text-align:center;padding:6px 0}
+  .pace-reached{color:var(--green);font-weight:500}
   /* MODEL PAGE */
   .model-toc{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px 20px}
   .model-toc-link{font-size:12px;color:var(--text2);text-decoration:none;padding:3px 0;cursor:pointer;transition:color .15s}
@@ -176,6 +203,8 @@
       <div class="nav-item" onclick="showPage('log')"><span class="nav-icon">+</span> Log trade</div>
       <div class="nav-item" onclick="showPage('patterns')"><span class="nav-icon">◈</span> Patterns</div>
       <div class="nav-item" onclick="showPage('model')"><span class="nav-icon">◇</span> Trading model</div>
+      <div class="nav-divider">Finance</div>
+      <div class="nav-item" onclick="showPage('finance')"><span class="nav-icon">$</span> Finance tracker</div>
     </div>
     <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px">
       <button class="ghost-btn" style="font-size:10px;padding:6px 10px" onclick="exportJournal()">EXPORT JSON</button>
@@ -509,6 +538,95 @@
       <div class="page-sub">Rule compliance, win/loss breakdown, and insights across all logged trades.</div>
       <div id="patterns-content"></div>
     </div>
+
+    <!-- FINANCE TRACKER -->
+    <div id="page-finance" class="page">
+      <div class="page-title">Finance tracker</div>
+      <div class="page-sub" id="fin-sub">Weekly cash flow snapshot — logged every Wednesday.</div>
+      <div class="metrics-4" id="fin-metrics"></div>
+
+      <div id="fin-pace-section"></div>
+
+      <div class="section-label">Recent entries</div>
+      <table class="trade-table"><thead><tr><th>Date</th><th>Net cash</th><th>Δ Week</th><th>Summary</th></tr></thead><tbody id="fin-tbody"></tbody></table>
+
+      <div style="margin-top:28px">
+        <div class="section-label">Log weekly entry</div>
+        <div class="log-card">
+          <div class="log-card-title">NEW WEEKLY ENTRY</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:18px;line-height:1.6">
+            Enter your six account balances below. Net cash and week delta are calculated automatically.
+          </div>
+
+          <div class="form-group" style="max-width:220px">
+            <label class="form-label">Date (Wednesday)</label>
+            <input type="text" id="fin-date-input" placeholder="5/13" style="font-family:var(--mono)">
+          </div>
+
+          <div class="section-label" style="margin-top:6px">Assets</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Truist (checking)</label>
+              <input type="number" step="0.01" id="fin-in-truist_checking" placeholder="0.00" oninput="updateLiveNet()" style="font-family:var(--mono)">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">AMEX (savings)</label>
+              <input type="number" step="0.01" id="fin-in-amex_savings" placeholder="0.00" oninput="updateLiveNet()" style="font-family:var(--mono)">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Webull (long-term)</label>
+              <input type="number" step="0.01" id="fin-in-webull_longterm" placeholder="0.00" oninput="updateLiveNet()" style="font-family:var(--mono)">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Cash</label>
+              <input type="number" step="0.01" id="fin-in-cash" placeholder="0.00" oninput="updateLiveNet()" style="font-family:var(--mono)">
+            </div>
+          </div>
+
+          <div class="section-label">Credit card debt</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">AMEX (debt owed)</label>
+              <input type="number" step="0.01" id="fin-in-amex_credit_debt" placeholder="0.00" oninput="updateLiveNet()" style="font-family:var(--mono)">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Capital One (debt owed)</label>
+              <input type="number" step="0.01" id="fin-in-capitalone_credit_debt" placeholder="0.00" oninput="updateLiveNet()" style="font-family:var(--mono)">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Summary (why was it a good or bad week?)</label>
+            <textarea id="fin-summary-input" rows="3" placeholder="Strong Friday and Saturday doubles. Slow Monday, picked up a Tuesday shift to make up for it."></textarea>
+          </div>
+
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div>
+              <div class="detail-field-lbl">Net cash (live)</div>
+              <div id="fin-live-net" style="font-family:var(--mono);font-size:18px;font-weight:500;color:var(--text)">$0</div>
+            </div>
+            <div>
+              <div class="detail-field-lbl">Δ vs last entry</div>
+              <div id="fin-live-delta" style="font-family:var(--mono);font-size:18px;font-weight:500;color:var(--text3)">baseline</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px">
+            <button class="save-btn" onclick="saveManualFinanceEntry()">SAVE ENTRY</button>
+            <button class="ghost-btn" onclick="clearManualFinanceForm()">CLEAR</button>
+            <span class="status-msg" id="fin-parse-status"></span>
+            <span class="status-msg" id="fin-save-msg" style="display:none;color:var(--green)">Saved.</span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="ghost-btn" style="font-size:10px;padding:6px 12px" onclick="exportFinance()">EXPORT FINANCE JSON</button>
+          <button class="ghost-btn" style="font-size:10px;padding:6px 12px" onclick="document.getElementById('fin-import-input').click()">IMPORT FINANCE JSON</button>
+          <button class="ghost-btn" style="font-size:10px;padding:6px 12px;color:var(--red)" onclick="resetFinance()">RESET FINANCE</button>
+          <input type="file" id="fin-import-input" accept=".json,application/json" style="display:none" onchange="importFinance(this)">
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -531,12 +649,45 @@ const SEED=[
 ];
 
 const STORAGE_KEY='brtr_journal_v3';
+const FINANCE_KEY='brtr_finance_v1';
+const FINANCE_SEED=[];
 let currentSort='date';
 let pendingTrade=null;
 let calYear=2026,calMonth=3; // 0-indexed, 3=April
 
 function loadTrades(){ try{ const d=localStorage.getItem(STORAGE_KEY); return d?JSON.parse(d):SEED; }catch(e){ return SEED; } }
 function saveTrades(t){ try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(t)); }catch(e){} }
+function loadFinance(){ try{ const d=localStorage.getItem(FINANCE_KEY); return d?JSON.parse(d):FINANCE_SEED; }catch(e){ return FINANCE_SEED; } }
+function saveFinance(e){ try{ localStorage.setItem(FINANCE_KEY,JSON.stringify(e)); }catch(err){} }
+
+// Two-click confirmation helper — works in any context (no confirm() dialog needed)
+function attachConfirmDelete(btn,onConfirm){
+  let armed=false;
+  let timeoutId=null;
+  const origText=btn.textContent;
+  function reset(){
+    armed=false;
+    btn.textContent=origText;
+    btn.style.background='';
+    btn.style.color='';
+    btn.style.borderColor='';
+    if(timeoutId){clearTimeout(timeoutId);timeoutId=null;}
+  }
+  btn.addEventListener('click',(ev)=>{
+    ev.stopPropagation();
+    if(armed){
+      reset();
+      onConfirm();
+    } else {
+      armed=true;
+      btn.textContent='CLICK AGAIN TO CONFIRM';
+      btn.style.background='var(--red)';
+      btn.style.color='#000';
+      btn.style.borderColor='var(--red)';
+      timeoutId=setTimeout(reset,3000);
+    }
+  });
+}
 function scoreColor(s){ return s>=85?'#3dd68c':s>=65?'#ffb347':'#ff5e5e'; }
 function outcomeClass(o){ return o==='win'?'win':o==='loss'?'loss':'be'; }
 function verdictHTML(t){
@@ -608,7 +759,6 @@ function calPrev(){ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCal
 function calNext(){ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
 
 function parseLocalDate(ds){
-  // Avoid UTC timezone shift by parsing as local time
   const m=ds.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if(!m) return new Date(ds);
   return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
@@ -617,7 +767,6 @@ function parseLocalDate(ds){
 function renderCalendar(){
   document.getElementById('cal-month-label').textContent=`${MONTH_NAMES[calMonth]} ${calYear}`;
   const trades=loadTrades();
-  // dayMap keyed by full date string YYYY-MM-DD so we can include prev/next month days
   const dayMap={};
   trades.forEach(t=>{
     if(!t.dateSort) return;
@@ -635,7 +784,6 @@ function renderCalendar(){
   const daysInPrev=new Date(calYear,calMonth,0).getDate();
   const today=new Date();
 
-  // Track weeks for summary
   const weeks=[];
   let currentWeek={pnl:0,wins:0,losses:0,trades:0,startDay:null,endDay:null,startMonth:null,endMonth:null};
 
@@ -651,7 +799,6 @@ function renderCalendar(){
     let html=`<div class="cal-date${isToday?' today-num':''}">${d}</div>`;
     if(dayData){
       const {pnl,trades:dt}=dayData;
-      // include in current week summary
       currentWeek.pnl+=pnl;
       currentWeek.trades+=dt.length;
       currentWeek.wins+=dt.filter(t=>t.outcome==='win').length;
@@ -664,7 +811,6 @@ function renderCalendar(){
     return cell;
   }
 
-  // Prev month days (still part of week 1)
   const prevYear=calMonth===0?calYear-1:calYear;
   const prevMonth=calMonth===0?11:calMonth-1;
   for(let i=0;i<firstDay;i++){
@@ -682,7 +828,6 @@ function renderCalendar(){
     dayCount++;
 
     if(dayCount%7===0||d===daysInMonth){
-      // pad next-month days for last week
       if(d===daysInMonth && dayCount%7!==0){
         const nextYear=calMonth===11?calYear+1:calYear;
         const nextMonth=calMonth===11?0:calMonth+1;
@@ -698,7 +843,6 @@ function renderCalendar(){
     }
   }
 
-  // render weekly summary list
   const wsList=document.getElementById('cal-week-summary-list');
   const tradedWeeks=weeks.filter(w=>w.trades>0);
   if(tradedWeeks.length===0){
@@ -720,7 +864,6 @@ function renderCalendar(){
     }).join('');
   }
 
-  // monthly summary - aggregate trades that actually fell in calMonth
   const monthTrades=trades.filter(t=>{
     if(!t.dateSort) return false;
     const d=parseLocalDate(t.dateSort);
@@ -791,6 +934,292 @@ function renderPatterns(trades){
     <div class="insight-card" style="border-color:var(--green)"><strong>Clean losses: ${cleanLosses}.</strong> High-compliance losses are variance — do not adjust the model.</div>`;
 }
 
+// ============================
+// FINANCE TRACKER
+// ============================
+const ACCOUNT_LABELS={
+  truist_checking:'Truist Checking',
+  amex_savings:'AMEX Savings',
+  webull_longterm:'Webull (LT)',
+  cash:'Cash',
+  amex_credit_debt:'AMEX Card',
+  capitalone_credit_debt:'Capital One Card'
+};
+const ASSET_KEYS=['truist_checking','amex_savings','webull_longterm','cash'];
+const DEBT_KEYS=['amex_credit_debt','capitalone_credit_debt'];
+
+function calcNetCash(b){
+  if(!b) return 0;
+  let net=0;
+  ASSET_KEYS.forEach(k=>{ net+=(parseFloat(b[k])||0); });
+  DEBT_KEYS.forEach(k=>{ net-=(parseFloat(b[k])||0); });
+  return Math.round(net*100)/100;
+}
+
+function fmtMoney(n){
+  if(n==null||isNaN(n)) return '$0';
+  const sign=n<0?'-':'';
+  const abs=Math.abs(n);
+  return sign+'$'+abs.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
+}
+
+function fmtDelta(n){
+  if(n==null||isNaN(n)) return '—';
+  const sign=n>=0?'+':'-';
+  const abs=Math.abs(n);
+  return sign+'$'+abs.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
+}
+
+function sortFinanceByDate(entries){
+  return [...entries].sort((a,b)=>parseDateSort(b.dateSort)-parseDateSort(a.dateSort));
+}
+
+function renderFinance(){
+  const entries=loadFinance();
+  // sorted oldest -> newest for delta calc
+  const chrono=[...entries].sort((a,b)=>parseDateSort(a.dateSort)-parseDateSort(b.dateSort));
+  // assign deltas
+  for(let i=0;i<chrono.length;i++){
+    chrono[i].netCash=calcNetCash(chrono[i].balances);
+    chrono[i].weekDelta=i===0?0:chrono[i].netCash-chrono[i-1].netCash;
+  }
+
+  // metrics
+  const metricsEl=document.getElementById('fin-metrics');
+  const subEl=document.getElementById('fin-sub');
+  const paceEl=document.getElementById('fin-pace-section');
+  if(chrono.length===0){
+    metricsEl.innerHTML=`<div class="metric-card" style="grid-column:span 4"><div class="metric-val" style="color:var(--text3);font-size:14px">No entries yet</div><div class="metric-lbl">Send your weekly balances to Claude to get started</div></div>`;
+    subEl.textContent='Weekly cash flow snapshot — logged every Wednesday.';
+    if(paceEl) paceEl.innerHTML='';
+    document.getElementById('fin-tbody').innerHTML=`<tr><td colspan="4" style="color:var(--text3);font-size:12px;padding:14px 12px;text-align:center;cursor:default">No entries logged yet.</td></tr>`;
+    return;
+  }
+  const latest=chrono[chrono.length-1];
+  const lastDelta=latest.weekDelta;
+  // 4-week delta = sum of last up-to-4 deltas
+  const recent4=chrono.slice(-4);
+  const fourWeekDelta=recent4.reduce((a,e,idx)=>{
+    if(chrono.indexOf(e)===0) return a; // skip first ever entry which has 0 delta
+    return a+e.weekDelta;
+  },0);
+  // all-time = latest - first
+  const allTimeDelta=chrono.length>1?latest.netCash-chrono[0].netCash:0;
+
+  subEl.textContent=`${chrono.length} entr${chrono.length===1?'y':'ies'} logged — latest ${latest.date}.`;
+  metricsEl.innerHTML=`
+    <div class="metric-card"><div class="metric-val">${fmtMoney(latest.netCash)}</div><div class="metric-lbl">Net cash</div></div>
+    <div class="metric-card"><div class="metric-val" style="color:${lastDelta>=0?'var(--green)':'var(--red)'}">${fmtDelta(lastDelta)}</div><div class="metric-lbl">Last week</div></div>
+    <div class="metric-card"><div class="metric-val" style="color:${fourWeekDelta>=0?'var(--green)':'var(--red)'}">${fmtDelta(fourWeekDelta)}</div><div class="metric-lbl">4-week change</div></div>
+    <div class="metric-card"><div class="metric-val" style="color:${allTimeDelta>=0?'var(--green)':'var(--red)'}">${fmtDelta(allTimeDelta)}</div><div class="metric-lbl">All-time change</div></div>`;
+
+  // ON PACE — $100,000 goal @ $600/week projection
+  const PACE_TARGET=100000;
+  const PACE_WEEKLY=600;
+  const remaining=PACE_TARGET-latest.netCash;
+  const pctRaw=(latest.netCash/PACE_TARGET)*100;
+  const pct=Math.max(0,Math.min(100,pctRaw));
+  if(remaining<=0){
+    paceEl.innerHTML=`<div class="pace-card">
+      <div class="pace-header"><span class="pace-title">On pace</span><span class="pace-subtitle">Goal: ${fmtMoney(PACE_TARGET)} @ ${fmtMoney(PACE_WEEKLY)}/week</span></div>
+      <div class="pace-bar-wrap"><div class="pace-bar-bg"><div class="pace-bar-fill" style="width:100%"></div></div><div class="pace-pct">100%</div></div>
+      <div class="pace-empty pace-reached">Goal reached — you're at ${fmtMoney(latest.netCash)}. Time to set a new one.</div>
+    </div>`;
+  } else {
+    const weeksNeeded=Math.ceil(remaining/PACE_WEEKLY);
+    const startDate=parseLocalDate(latest.dateSort);
+    const targetDate=new Date(startDate.getFullYear(),startDate.getMonth(),startDate.getDate()+weeksNeeded*7);
+    const targetStr=targetDate.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+    paceEl.innerHTML=`<div class="pace-card">
+      <div class="pace-header"><span class="pace-title">On pace</span><span class="pace-subtitle">Goal: ${fmtMoney(PACE_TARGET)} @ ${fmtMoney(PACE_WEEKLY)}/week</span></div>
+      <div class="pace-bar-wrap"><div class="pace-bar-bg"><div class="pace-bar-fill" style="width:${pct}%"></div></div><div class="pace-pct">${pct.toFixed(1)}%</div></div>
+      <div class="pace-stats">
+        <div class="pace-stat"><div class="pace-stat-val">${fmtMoney(latest.netCash)}</div><div class="pace-stat-lbl">Current</div></div>
+        <div class="pace-stat"><div class="pace-stat-val">${fmtMoney(remaining)}</div><div class="pace-stat-lbl">Remaining</div></div>
+        <div class="pace-stat"><div class="pace-stat-val">${weeksNeeded}</div><div class="pace-stat-lbl">Weeks left</div></div>
+        <div class="pace-stat"><div class="pace-stat-val target">${targetStr}</div><div class="pace-stat-lbl">Target date</div></div>
+      </div>
+    </div>`;
+  }
+
+  // table (newest first)
+  const tbody=document.getElementById('fin-tbody');
+  tbody.innerHTML='';
+  const desc=[...chrono].reverse();
+  desc.forEach(e=>{
+    const tr=document.createElement('tr');
+    const deltaColor=e.weekDelta>0?'var(--green)':e.weekDelta<0?'var(--red)':'var(--text3)';
+    const deltaTxt=e===chrono[0]?'<span style="color:var(--text3);font-size:11px;font-family:var(--mono)">baseline</span>':`<span style="font-family:var(--mono);font-weight:500;color:${deltaColor}">${fmtDelta(e.weekDelta)}</span>`;
+    const summaryShort=e.summary?(e.summary.length>80?e.summary.slice(0,77)+'…':e.summary):'<span style="color:var(--text3)">—</span>';
+    tr.innerHTML=`<td style="color:var(--text3);font-family:var(--mono);font-size:11px">${e.date}</td><td style="font-family:var(--mono);font-weight:500">${fmtMoney(e.netCash)}</td><td>${deltaTxt}</td><td style="font-size:12px;color:var(--text2)">${summaryShort}</td>`;
+    tr.onclick=()=>toggleFinanceDetail(e.id);
+    tbody.appendChild(tr);
+
+    const dr=document.createElement('tr'); dr.className='detail-row';
+    const dc=document.createElement('td'); dc.colSpan=4;
+    const inner=document.createElement('div'); inner.className='detail-inner'; inner.id=`fin-detail-${e.id}`;
+    let balHTML='<div class="balance-grid">';
+    ASSET_KEYS.forEach(k=>{
+      balHTML+=`<div class="balance-item asset"><div class="balance-lbl">${ACCOUNT_LABELS[k]}</div><div class="balance-val">${fmtMoney(e.balances[k]||0)}</div></div>`;
+    });
+    DEBT_KEYS.forEach(k=>{
+      balHTML+=`<div class="balance-item debt"><div class="balance-lbl">${ACCOUNT_LABELS[k]}</div><div class="balance-val debt">−${fmtMoney(e.balances[k]||0).replace('-','')}</div></div>`;
+    });
+    balHTML+='</div>';
+    // build inner content safely — escape summary as text, attach delete via addEventListener
+    inner.innerHTML=balHTML;
+    if(e.summary){
+      const sb=document.createElement('div'); sb.className='summary-box';
+      sb.innerHTML='<strong>Summary:</strong> ';
+      sb.appendChild(document.createTextNode(e.summary));
+      inner.appendChild(sb);
+    }
+    const delBtn=document.createElement('button');
+    delBtn.className='delete-trade-btn';
+    delBtn.textContent='DELETE ENTRY';
+    delBtn.dataset.finId=e.id;
+    attachConfirmDelete(delBtn,()=>{
+      deleteFinanceEntry(parseInt(delBtn.dataset.finId,10));
+    });
+    inner.appendChild(delBtn);
+    dc.appendChild(inner); dr.appendChild(dc); tbody.appendChild(dr);
+  });
+
+  // persist recalculated deltas/netCash
+  saveFinance(chrono);
+}
+
+function toggleFinanceDetail(id){
+  document.querySelectorAll('#fin-tbody .detail-inner').forEach(el=>{ if(el.id!==`fin-detail-${id}`) el.classList.remove('open'); });
+  const el=document.getElementById(`fin-detail-${id}`); if(el) el.classList.toggle('open');
+}
+
+function readFinanceForm(){
+  const balances={};
+  ['truist_checking','amex_savings','webull_longterm','cash','amex_credit_debt','capitalone_credit_debt'].forEach(k=>{
+    const v=document.getElementById('fin-in-'+k).value;
+    balances[k]=v===''?0:(parseFloat(v)||0);
+  });
+  return {
+    date:document.getElementById('fin-date-input').value.trim(),
+    balances,
+    summary:document.getElementById('fin-summary-input').value.trim()
+  };
+}
+
+function updateLiveNet(){
+  const form=readFinanceForm();
+  const net=calcNetCash(form.balances);
+  document.getElementById('fin-live-net').textContent=fmtMoney(net);
+
+  // delta vs latest existing entry
+  const entries=loadFinance();
+  const chrono=[...entries].sort((a,b)=>parseDateSort(a.dateSort)-parseDateSort(b.dateSort));
+  const deltaEl=document.getElementById('fin-live-delta');
+  if(chrono.length===0){
+    deltaEl.textContent='baseline';
+    deltaEl.style.color='var(--text3)';
+  } else {
+    const prevNet=calcNetCash(chrono[chrono.length-1].balances);
+    const delta=net-prevNet;
+    deltaEl.textContent=fmtDelta(delta);
+    deltaEl.style.color=delta>=0?'var(--green)':'var(--red)';
+  }
+}
+
+function clearManualFinanceForm(){
+  ['truist_checking','amex_savings','webull_longterm','cash','amex_credit_debt','capitalone_credit_debt'].forEach(k=>{
+    document.getElementById('fin-in-'+k).value='';
+  });
+  document.getElementById('fin-date-input').value='';
+  document.getElementById('fin-summary-input').value='';
+  document.getElementById('fin-parse-status').textContent='';
+  updateLiveNet();
+}
+
+function saveManualFinanceEntry(){
+  const form=readFinanceForm();
+  const statusEl=document.getElementById('fin-parse-status');
+  statusEl.style.color='';
+  if(!form.date){
+    statusEl.textContent='Date required (e.g. 5/13).';
+    statusEl.style.color='var(--red)';
+    return;
+  }
+  const dateMatch=form.date.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
+  if(!dateMatch){
+    statusEl.textContent='Date format: M/D or M/D/YY.';
+    statusEl.style.color='var(--red)';
+    return;
+  }
+  const yr=dateMatch[3]?(dateMatch[3].length===2?'20'+dateMatch[3]:dateMatch[3]):'2026';
+  const dateSort=`${yr}-${dateMatch[1].padStart(2,'0')}-${dateMatch[2].padStart(2,'0')}`;
+
+  const entries=loadFinance();
+  const newEntry={
+    id:Math.max(0,...entries.map(e=>e.id||0))+1,
+    dateSort,
+    date:form.date,
+    balances:form.balances,
+    summary:form.summary,
+    netCash:calcNetCash(form.balances),
+    weekDelta:0 // recalculated in renderFinance
+  };
+  entries.push(newEntry);
+  saveFinance(entries);
+  statusEl.textContent='';
+  document.getElementById('fin-save-msg').style.display='inline';
+  setTimeout(()=>document.getElementById('fin-save-msg').style.display='none',2500);
+  clearManualFinanceForm();
+  renderFinance();
+}
+
+function deleteFinanceEntry(id){
+  const entries=loadFinance();
+  const numId=parseInt(id,10);
+  saveFinance(entries.filter(x=>parseInt(x.id,10)!==numId));
+  renderFinance();
+}
+
+function exportFinance(){
+  const entries=loadFinance();
+  if(entries.length===0){alert('No finance entries to export.');return;}
+  const blob=new Blob([JSON.stringify(entries,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const today=new Date().toISOString().split('T')[0];
+  a.href=url; a.download=`finance_tracker_${today}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importFinance(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!Array.isArray(data)) throw new Error('Invalid format');
+      if(!confirm(`Import ${data.length} finance entries? This will replace your current finance log.`)) return;
+      saveFinance(data);
+      renderFinance();
+      alert('Imported '+data.length+' entries.');
+    }catch(err){ alert('Import failed: '+err.message); }
+  };
+  reader.readAsText(file);
+  input.value='';
+}
+
+function resetFinance(){
+  if(!confirm('Reset finance tracker? This will delete all logged entries.')) return;
+  if(!confirm('Are you sure? All finance entries will be lost.')) return;
+  localStorage.removeItem(FINANCE_KEY);
+  renderFinance();
+}
+
+// ============================
+// SHARED / TRADE LOG
+// ============================
 function clearJsonInput(){
   document.getElementById('json-input').value='';
   document.getElementById('parse-status').textContent='';
@@ -803,9 +1232,7 @@ function addJsonTrade(){
   document.getElementById('parse-status').textContent='';
   let parsed;
   try{
-    // strip markdown fences and any surrounding text
     let cleaned=raw.replace(/```json|```/g,'').trim();
-    // try to grab from first { to last }
     const first=cleaned.indexOf('{');
     const last=cleaned.lastIndexOf('}');
     if(first!==-1 && last!==-1) cleaned=cleaned.slice(first,last+1);
@@ -815,7 +1242,6 @@ function addJsonTrade(){
     return;
   }
 
-  // Normalize field names — accept both snake_case and camelCase
   const norm={
     ticker:parsed.ticker||'',
     date:parsed.date||'',
@@ -837,7 +1263,6 @@ function addJsonTrade(){
     return;
   }
 
-  // Recompute score from rules
   norm.score=Math.round(Object.values(norm.rules).filter(v=>v===1).length/7*100);
 
   pendingTrade=norm;
@@ -910,9 +1335,10 @@ function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  const names=['dashboard','calendar','trades','log','patterns','model'];
+  const names=['dashboard','calendar','trades','log','patterns','model','finance'];
   document.querySelectorAll('.nav-item')[names.indexOf(name)].classList.add('active');
   if(name==='calendar') renderCalendar();
+  if(name==='finance') renderFinance();
 }
 
 function deleteTrade(id){
@@ -933,6 +1359,7 @@ function render(){
   buildRows(sortTrades(trades,'date'),'dash-tbody');
   buildRows(sortTrades(trades,currentSort),'all-tbody');
   renderPatterns(trades);
+  renderFinance();
 }
 
 function exportJournal(){
