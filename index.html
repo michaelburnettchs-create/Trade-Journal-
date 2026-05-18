@@ -665,22 +665,12 @@
       <div class="section-label">Indices &amp; key tickers</div>
       <div id="tv-ticker-tape" style="margin-bottom:24px"></div>
 
-      <div class="section-label">Index charts (8 EMA, VWAP, daily 20/50/100/200 SMAs)</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
-        <div class="tv-chart-wrap" id="tv-mini-spy"></div>
-        <div class="tv-chart-wrap" id="tv-mini-qqq"></div>
-        <div class="tv-chart-wrap" id="tv-mini-iwm"></div>
-      </div>
-
       <div class="section-label">Performance comparison — SPY / QQQ / SMH / IWM</div>
       <div style="font-size:11px;color:var(--text3);margin-bottom:10px;font-family:var(--mono)">Y-axis is % gain from start of range. Toggle the date selector to switch between 5D (≈WTD), 1M (≈MTD), and YTD.</div>
       <div id="tv-performance" style="margin-bottom:24px;min-height:500px;background:var(--bg2);border-radius:8px;overflow:hidden"></div>
 
       <div class="section-label">Watchlist (MAG 7 + core tickers)</div>
       <div id="tv-watchlist" style="margin-bottom:24px;min-height:560px"></div>
-
-      <div class="section-label">Economic calendar (USD, medium + high impact)</div>
-      <div id="tv-calendar" style="margin-bottom:24px;min-height:500px"></div>
 
       <div class="section-label">Market heatmap</div>
       <div id="tv-heatmap" style="margin-bottom:24px;min-height:500px"></div>
@@ -1415,14 +1405,6 @@ function loadTvWidget(containerId,scriptSrc,config){
 // ============================
 // Premarket data — TradingView widgets only (no custom fetches, no proxies)
 // ============================
-function loadTvCalendar(){
-  loadTvWidget('tv-calendar','https://s3.tradingview.com/external-embedding/embed-widget-events.js',{
-    width:'100%',height:500,
-    colorTheme:'dark',isTransparent:true,locale:'en',
-    importanceFilter:'0,1',countryFilter:'us'
-  });
-}
-
 function renderPremarket(){
   if(premarketLoaded) return;
   premarketLoaded=true;
@@ -1457,39 +1439,7 @@ function renderPremarket(){
     locale:'en'
   });
 
-  // 2. Advanced charts for SPY / QQQ / IWM — with 8 EMA, VWAP, daily SMAs
-  const advChartBase={
-    autosize:true,
-    interval:'D',
-    timezone:'America/New_York',
-    theme:'dark',
-    style:'1',
-    locale:'en',
-    backgroundColor:'rgba(17, 17, 24, 1)',
-    gridColor:'rgba(255, 255, 255, 0.06)',
-    toolbar_bg:'rgba(17, 17, 24, 1)',
-    enable_publishing:false,
-    hide_side_toolbar:false,
-    allow_symbol_change:false,
-    save_image:false,
-    show_popup_button:true,
-    popup_width:'1200',
-    popup_height:'800',
-    studies:[
-      {id:'STD;EMA',inputs:{length:8}},
-      {id:'STD;VWAP'},
-      {id:'STD;SMA',inputs:{length:20}},
-      {id:'STD;SMA',inputs:{length:50}},
-      {id:'STD;SMA',inputs:{length:100}},
-      {id:'STD;SMA',inputs:{length:200}}
-    ],
-    support_host:'https://www.tradingview.com'
-  };
-  loadTvWidget('tv-mini-spy','https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',{...advChartBase,symbol:'AMEX:SPY',container_id:'tv-mini-spy'});
-  loadTvWidget('tv-mini-qqq','https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',{...advChartBase,symbol:'NASDAQ:QQQ',container_id:'tv-mini-qqq'});
-  loadTvWidget('tv-mini-iwm','https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',{...advChartBase,symbol:'AMEX:IWM',container_id:'tv-mini-iwm'});
-
-  // 2.5. Performance comparison — SPY / QQQ / SMH / IWM normalized to % gain
+  // 2. Performance comparison — SPY / QQQ / SMH / IWM normalized to % gain
   // scaleMode:'Percentage' makes the y-axis show % from start of range, so
   // the user can compare relative performance directly. Date range selector
   // is visible so they can toggle WTD (5D) / MTD (1M) / YTD.
@@ -1549,10 +1499,7 @@ function renderPremarket(){
     locale:'en'
   });
 
-  // 4. Economic calendar — TradingView events widget (USD, medium+high impact)
-  loadTvCalendar();
-
-  // 5. Market heatmap — S&P 500
+  // 3. Market heatmap — S&P 500
   loadTvWidget('tv-heatmap','https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js',{
     exchanges:[],
     dataSource:'SPX500',
